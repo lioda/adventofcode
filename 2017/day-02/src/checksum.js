@@ -13,5 +13,21 @@ function checksum(array) {
       .reduce((min, max) => max - min)
     ).reduce((a,b) => a + b);
 }
+function checksumByDivide(array) {
+  return array.filter(e => e).map(s =>  {
+    const splitted = s.split(/[\s,]+/);
+    const div = [];
+    splitted.find((e) =>{
+      const divisor = splitted.find(divisor => e != divisor && e % divisor == 0);
+      if (divisor) {
+        div.push(e, divisor);
+        return true;
+      }
+      return false;
+    });
+    return div[0] / div[1];
+  })
+  .reduce((a,b) => a + b);
+}
 
-module.exports = checksum
+module.exports = {checksum: checksum, checksumByDivide: checksumByDivide}

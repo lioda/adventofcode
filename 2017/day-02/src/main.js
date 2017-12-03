@@ -1,4 +1,4 @@
-const checksum = require('./checksum.js');
+const checksums = require('./checksum.js');
 var fs  = require("fs");
 
 console.log('start');
@@ -10,8 +10,8 @@ fs.readFile('input.txt', function(err, f){
   var array = f.toString().split('\n');
   console.log(array);
   // use the array
-  const result = checksum(array);
-  console.log(`result => ${result}`);
+  console.log(`result => ${checksums.checksum(array)}`);
+  console.log(`result => ${checksums.checksumByDivide(array)}`);
 });
 
 console.log('end');
