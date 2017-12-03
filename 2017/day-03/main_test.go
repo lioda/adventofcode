@@ -21,3 +21,14 @@ func Test23Distance2(t *testing.T) {
 func Test1024Distance31(t *testing.T) {
 	assert.Equal(t, 31, Distance(1024))
 }
+
+func TestStressHigher12Equal23(t *testing.T) {
+	result, cell := PartTwo(12)
+	assert.Equal(t, 23, result)
+	assert.Equal(t, Cell{0, -1}, cell)
+}
+func TestStressHigher800Equal806(t *testing.T) {
+	result, cell := PartTwo(800)
+	assert.Equal(t, 806, result)
+	assert.Equal(t, Cell{0, -2}, cell)
+}

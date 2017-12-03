@@ -66,9 +66,7 @@ func Distance(value int) int {
 	direction := RIGHT2
 	cell := Cell{0, 0}
 	width := 0
-	// fmt.Printf("Start:\n{%d, %d}\n", cell.X, cell.Y)
 	for i := 1; i < value; i++ {
-		// fmt.Printf("will move %d\n", direction.MoveCoordinate(cell))
 		if abs(direction.MoveCoordinate(cell)) == abs(width) {
 			if direction == RIGHT2 {
 				width++
@@ -76,13 +74,51 @@ func Distance(value int) int {
 			direction = direction.Next()
 		}
 		cell, _ = direction.Step(cell)
-		// fmt.Printf("%d = {%d, %d}\n", i+1, cell.X, cell.Y)
 	}
-	// fmt.Printf("%s\n", cell)
 	return abs(cell.X) + abs(cell.Y)
+}
+
+type Data struct {
+	M map[Cell]int
+}
+
+func (d *Data) Value(c Cell) int {
+	value := d.M[Cell{c.X + 1, c.Y}] +
+		d.M[Cell{c.X + 1, c.Y + 1}] + d.M[Cell{c.X, c.Y + 1}] + d.M[Cell{c.X - 1, c.Y + 1}] +
+		d.M[Cell{c.X - 1, c.Y}] +
+		d.M[Cell{c.X - 1, c.Y - 1}] + d.M[Cell{c.X, c.Y - 1}] + d.M[Cell{c.X + 1, c.Y - 1}]
+	return value
+}
+func NewData() Data {
+	data := Data{map[Cell]int{}}
+	return data
+}
+
+func PartTwo(search int) (int, Cell) {
+	data := NewData()
+	direction := RIGHT2
+	cell := Cell{0, 0}
+	width := 0
+	last := 1
+	data.M[cell] = 1
+	for last < search {
+		if abs(direction.MoveCoordinate(cell)) == abs(width) {
+			if direction == RIGHT2 {
+				width++
+			}
+			direction = direction.Next()
+		}
+		cell, _ = direction.Step(cell)
+		value := data.Value(cell)
+		data.M[cell] = value
+		last = value
+	}
+	return last, cell
 }
 
 func main() {
 	input := 312051
 	fmt.Printf("%d => %d\n", input, Distance(input))
+	value, cell := PartTwo(input)
+	fmt.Printf("%d => %d\n", input, value, cell)
 }
