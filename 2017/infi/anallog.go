@@ -1,18 +1,30 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"reflect"
+	"strings"
 )
 
 type AnalLog struct {
 	Log        io.Reader
 	robots     []Robot
 	robotIndex int
+	grid       [][]string
 }
 
 func NewAnalLog(reader io.Reader) *AnalLog {
-	return &AnalLog{Log: reader}
+	maxX := 50
+	maxY := 30
+	grid := make([][]string, maxY)
+	for i, _ := range grid {
+		grid[i] = make([]string, maxX)
+		for j, _ := range grid[i] {
+			grid[i][j] = " "
+		}
+	}
+	return &AnalLog{Log: reader, grid: grid}
 }
 
 func (a AnalLog) findBottleneck() bool {
@@ -21,8 +33,8 @@ func (a AnalLog) findBottleneck() bool {
 	}
 	for i, r1 := range a.robots {
 		for j, r2 := range a.robots {
-			// fmt.Printf("Compare %d / %s with %d / %s\n", i, r1, j, r2)
 			if i != j && reflect.DeepEqual(r1, r2) {
+				a.grid[r1.Y][r1.X] = "X"
 				return true
 			}
 		}
@@ -39,7 +51,6 @@ func (a *AnalLog) createRobot(init string) {
 
 func (a *AnalLog) moveRobot(coordinates string) {
 	index := a.robotIndex % len(a.robots)
-	// fmt.Printf("%d Robots: %s, Index: %d, Move: %s\n", len(a.robots), a.robots, index, coordinates)
 	a.robots[index].Move(coordinates)
 	a.robotIndex++
 }
@@ -55,6 +66,10 @@ func (a *AnalLog) CountBottlenecks() (result int) {
 		if a.findBottleneck() {
 			result++
 		}
+	}
+	fmt.Println("Display AI Message:")
+	for _, row := range a.grid {
+		fmt.Println(strings.Join(row, " "))
 	}
 	return result
 }
