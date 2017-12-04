@@ -21,10 +21,29 @@ func IsValid(passphrase string) bool {
 	return true
 }
 
-func CountValid(passphrases []string) int {
+func IsValidAnagrams(passphrase string) bool {
+	words := strings.Split(passphrase, " ")
+	anagrams := []string{}
+	for _, word := range words {
+		letters := strings.Split(word, "")
+		sort.Strings(letters)
+		anagrams = append(anagrams, strings.Join(letters, ""))
+	}
+	sort.Strings(anagrams)
+	var last string
+	for _, word := range anagrams {
+		if word == last {
+			return false
+		}
+		last = word
+	}
+	return true
+}
+
+func CountValid(passphrases []string, validator func(string) bool) int {
 	result := 0
 	for _, passphrase := range passphrases {
-		if IsValid(passphrase) {
+		if validator(passphrase) {
 			result++
 		}
 	}
@@ -39,5 +58,6 @@ func main() {
 		lines = append(lines, string(line))
 	}
 	fmt.Printf("%s\n", strings.Join(lines, "\n"))
-	fmt.Printf("%d are valids\n", CountValid(lines))
+	fmt.Printf("%d are valids\n", CountValid(lines, IsValid))
+	fmt.Printf("%d are valids accroding to anagrams rule\n", CountValid(lines, IsValidAnagrams))
 }
