@@ -33,6 +33,7 @@ func (p *Parser) Next() string {
 				result = result + read
 				advance = advance + ad
 			}
+			// fmt.Printf("Read: %s\n", result)
 			return advance, []byte(result), err
 		})
 	}
