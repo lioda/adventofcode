@@ -3,17 +3,17 @@ package main
 import (
 	"bufio"
 	"errors"
-	"strings"
+	"io"
 )
 
 type Parser struct {
-	Input  string
+	Input  io.Reader
 	parser *bufio.Scanner
 }
 
 func (p *Parser) Next() string {
 	if p.parser == nil {
-		p.parser = bufio.NewScanner(strings.NewReader(p.Input))
+		p.parser = bufio.NewScanner(p.Input)
 		p.parser.Split(func(data []byte, atEOF bool) (advance int, token []byte, err error) {
 			if atEOF {
 				return advance, token, errors.New("end of file")
@@ -22,10 +22,10 @@ func (p *Parser) Next() string {
 			advance = 0
 			result := ""
 			for read := ""; read != parsingLimit; {
-				ad, t, err := bufio.ScanRunes(data[advance:], atEOF)
-				if err != nil {
-					return advance, token, err
+				if advance >= len(data) {
+					return 0, nil, nil
 				}
+				ad, t, _ := bufio.ScanRunes(data[advance:], atEOF)
 				read = string(t)
 				if read == "(" {
 					parsingLimit = ")"
@@ -33,12 +33,12 @@ func (p *Parser) Next() string {
 				result = result + read
 				advance = advance + ad
 			}
-			// fmt.Printf("Read: %s\n", result)
 			return advance, []byte(result), err
 		})
 	}
 	if p.parser.Scan() == false {
 		return "EOF"
 	}
-	return p.parser.Text()
+	result := p.parser.Text()
+	return result
 }

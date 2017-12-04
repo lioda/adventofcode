@@ -1,13 +1,18 @@
 package main
 
 import (
+	"io"
 	"reflect"
 )
 
 type AnalLog struct {
-	Log        string
+	Log        io.Reader
 	robots     []Robot
 	robotIndex int
+}
+
+func NewAnalLog(reader io.Reader) *AnalLog {
+	return &AnalLog{Log: reader}
 }
 
 func (a AnalLog) findBottleneck() bool {
