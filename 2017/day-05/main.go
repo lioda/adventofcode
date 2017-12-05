@@ -27,6 +27,19 @@ func (cpu *Cpu) Step() bool {
 	cpu.Current = cpu.Current + instr
 	return true
 }
+func (cpu *Cpu) Step2() bool {
+	if cpu.Current >= len(cpu.Instr) {
+		return false
+	}
+	instr := cpu.Instr[cpu.Current]
+	if instr >= 3 {
+		cpu.Instr[cpu.Current]--
+	} else {
+		cpu.Instr[cpu.Current]++
+	}
+	cpu.Current = cpu.Current + instr
+	return true
+}
 func (cpu *Cpu) Print() string {
 	display := []string{}
 	for i, instr := range cpu.Instr {
@@ -68,9 +81,23 @@ func (m *Maze) CountStepToExit() int {
 	}
 	return count
 }
+func (m *Maze) CountStepToExit2() int {
+	instr := m.readInput()
+	cpu := NewCpu(instr)
+	count := 0
+	// fmt.Printf("%d - %s\n", count, cpu.Print())
+	for cpu.Step2() {
+		count++
+		// fmt.Printf("%d - %s\n", count, cpu.Print())
+	}
+	return count
+}
 
 func main() {
 	input, _ := os.Open("input.txt")
 	maze := Maze{input}
 	fmt.Printf("%d\n", maze.CountStepToExit())
+	input, _ = os.Open("input.txt")
+	maze = Maze{input}
+	fmt.Printf("%d\n", maze.CountStepToExit2())
 }
