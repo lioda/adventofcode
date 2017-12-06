@@ -7,5 +7,7 @@ import (
 )
 
 func TestReallocateAndFindSeenPattern(t *testing.T) {
-	assert.Equal(t, 5, Reallocate([]int{0, 2, 7, 0}))
+	result, size := Reallocate([]int{0, 2, 7, 0})
+	assert.Equal(t, 5, result)
+	assert.Equal(t, 4, size)
 }

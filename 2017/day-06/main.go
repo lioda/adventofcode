@@ -4,6 +4,7 @@ import "fmt"
 
 func main() {
 	input := ParseFile("input.txt")
-	result := Reallocate(input)
+	result, size := Reallocate(input)
 	fmt.Printf("Reallocation: %d\n", result)
+	fmt.Printf("Reallocation: %d\n", size)
 }
