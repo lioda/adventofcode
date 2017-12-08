@@ -110,4 +110,5 @@ c inc -20 if c == 10
 	}
 	// fmt.Printf("Largest value: %v\n", cpu.Registers)
 	assert.Equal(t, 1, cpu.FindLargest())
+	assert.Equal(t, 10, cpu.FindLargestAnyTime())
 }

@@ -10,7 +10,8 @@ import (
 )
 
 type Cpu struct {
-	Registers map[string]int
+	Registers      map[string]int
+	largestAnyTime int
 }
 
 func (cpu *Cpu) Process(instr string) {
@@ -32,6 +33,9 @@ func (cpu *Cpu) Process(instr string) {
 			cpu.Registers[destReg] = cpu.Registers[destReg] - destOperand
 		}
 	}
+	if largest := cpu.FindLargest(); largest > cpu.largestAnyTime {
+		cpu.largestAnyTime = largest
+	}
 }
 func (cpu *Cpu) evaluateCond(reg string, op string, comp int) bool {
 	switch op {
@@ -52,6 +56,9 @@ func (cpu *Cpu) evaluateCond(reg string, op string, comp int) bool {
 }
 
 func (cpu Cpu) FindLargest() int {
+	if len(cpu.Registers) == 0 {
+		return 0
+	}
 	largest := cpu.Registers[reflect.ValueOf(cpu.Registers).MapKeys()[0].String()]
 	for _, v := range cpu.Registers {
 		if largest < v {
@@ -60,9 +67,12 @@ func (cpu Cpu) FindLargest() int {
 	}
 	return largest
 }
+func (cpu Cpu) FindLargestAnyTime() int {
+	return cpu.largestAnyTime
+}
 
 func NewCpu() *Cpu {
-	return &Cpu{make(map[string]int)}
+	return &Cpu{make(map[string]int), 0}
 }
 func main() {
 	cpu := NewCpu()
@@ -75,4 +85,5 @@ func main() {
 		cpu.Process(string(line))
 	}
 	fmt.Printf("Largest value: %d\n", cpu.FindLargest())
+	fmt.Printf("Largest value any time: %d\n", cpu.FindLargestAnyTime())
 }
