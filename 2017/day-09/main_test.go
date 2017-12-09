@@ -35,3 +35,26 @@ func TestGarbageContainingCancelMark(t *testing.T) {
 func TestGarbageCancelTheCancel(t *testing.T) {
 	assert.Equal(t, 9, ComputeScore(strings.NewReader("{{<!!>},{<!!>},{<!!>},{<!!>}}")))
 }
+
+func TestCountEmptyGarbage(t *testing.T) {
+	assert.Equal(t, 0, CountGarbage(strings.NewReader("<>")))
+}
+func TestCountFullGarbage(t *testing.T) {
+	assert.Equal(t, 17, CountGarbage(strings.NewReader("<random characters>")))
+}
+func TestCountFakeGarbageOpener(t *testing.T) {
+	assert.Equal(t, 3, CountGarbage(strings.NewReader("<<<<>")))
+}
+func TestCountIgnoreCanceledCharacters(t *testing.T) {
+	assert.Equal(t, 2, CountGarbage(strings.NewReader("<{!>}>")))
+}
+func TestCountOnlyIgnoredCharacters(t *testing.T) {
+	assert.Equal(t, 0, CountGarbage(strings.NewReader("<!!>")))
+	assert.Equal(t, 0, CountGarbage(strings.NewReader("<!!!>>")))
+}
+func TestCountCompleteSequence(t *testing.T) {
+	assert.Equal(t, 10, CountGarbage(strings.NewReader(`<{o"i!a,<{i<a>`)))
+}
+func TestCountWithGroupe(t *testing.T) {
+	assert.Equal(t, 17, CountGarbage(strings.NewReader(`{{<a!>},{<a!>},{<a!>},{<ab>}}`)))
+}
