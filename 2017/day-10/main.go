@@ -109,11 +109,7 @@ func xor16(input []int) []int {
 func hex(input []int) string {
 	result := ""
 	for _, item := range input {
-		h := strconv.FormatInt(int64(item), 16)
-		if len(h) == 1 {
-			h = "0" + h
-		}
-		result = result + h
+		result = result + fmt.Sprintf("%02x", item)
 	}
 	return result
 }
