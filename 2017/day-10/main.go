@@ -13,6 +13,13 @@ func parseLengths(s string) (lengths []int) {
 	}
 	return
 }
+func parseLengths2(s string) (lengths []int) {
+	for _, i := range s {
+		lengths = append(lengths, int(i))
+	}
+	lengths = append(lengths, 17, 31, 73, 47, 23)
+	return
+}
 
 func ints(length int) []int {
 	result := make([]int, length)
@@ -62,8 +69,57 @@ func replace(input []int, start int, rep []int) {
 	}
 }
 
+func knotHash(input []int, lengths []int) string {
+	sparseHash := input
+	curr := 0
+	skipSize := 0
+	// fmt.Printf("Start: sparseHash=%v, length=%v\n", sparseHash, lengths)
+	for round := 0; round < 64; round++ {
+		for _, length := range lengths {
+			// debug := append(sparseHash, 0)
+			toReverse := sublist(sparseHash, curr, length)
+			reversed := reverse(toReverse)
+			replace(sparseHash, curr, reversed)
+			// fmt.Printf("Length %d: before=%v => after=%v (%d), length=%v, toReverse=%v, reversed=%v\n", length, debug, sparseHash, curr, lengths, toReverse, reversed)
+			curr = curr + length + skipSize
+			skipSize++
+		}
+	}
+	denseHash := xor16(sparseHash)
+	result := hex(denseHash)
+	return result
+}
+
+func xor16(input []int) []int {
+	result := []int{}
+	for i := 0; i < len(input); i = i + 16 {
+		// fmt.Printf("%v[%d:%d]\n", input, i, i+16)
+		arr := input[i : i+16]
+		reduce := arr[0]
+		for j := 1; j < 16; j++ {
+			// fmt.Printf("%d ^ %d\n", reduce, arr[j])
+			reduce = reduce ^ arr[j]
+			// reduce = reduce | j
+		}
+		result = append(result, reduce)
+	}
+	return result
+}
+
+func hex(input []int) string {
+	result := ""
+	for _, item := range input {
+		h := strconv.FormatInt(int64(item), 16)
+		if len(h) == 1 {
+			h = "0" + h
+		}
+		result = result + h
+	}
+	return result
+}
+
 func main() {
 	lengths := parseLengths("206,63,255,131,65,80,238,157,254,24,133,2,16,0,1,3")
-	input := ints(256)
-	fmt.Printf("Hash then multiply first two numbers: %d\n", hashMult(input, lengths))
+	fmt.Printf("Hash then multiply first two numbers: %d\n", hashMult(ints(256), lengths))
+	fmt.Printf("Knot hash: %s\n", knotHash(ints(256), parseLengths2("206,63,255,131,65,80,238,157,254,24,133,2,16,0,1,3")))
 }
