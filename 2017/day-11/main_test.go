@@ -37,6 +37,7 @@ func TestMoveBackToOrigin(t *testing.T) {
 	cell.Move(SW)
 	cell.Move(SW)
 	assert.Equal(t, 0, cell.distance())
+	assert.Equal(t, 2, cell.furthest)
 }
 func TestMoveTwoStepsAway(t *testing.T) {
 	cell := NewCell()

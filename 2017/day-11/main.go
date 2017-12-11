@@ -33,11 +33,12 @@ type movable interface {
 }
 
 type Cell struct {
-	x, y, z int
+	x, y, z  int
+	furthest int
 }
 
 func NewCell() *Cell {
-	return &Cell{0, 0, 0}
+	return &Cell{0, 0, 0, 0}
 }
 func (c *Cell) Move(d direction) {
 	switch d {
@@ -59,6 +60,9 @@ func (c *Cell) Move(d direction) {
 	case SW:
 		c.z++
 		c.x--
+	}
+	if distance := c.distance(); distance > c.furthest {
+		c.furthest = distance
 	}
 }
 func (c Cell) distance() int {
@@ -101,4 +105,5 @@ func main() {
 	parser := NewParser(f, cell)
 	parser.Parse()
 	fmt.Printf("Distance: %d\n", cell.distance())
+	fmt.Printf("Furthest: %d\n", cell.furthest)
 }
