@@ -20,7 +20,7 @@ func TestInitialState(t *testing.T) {
 
 func TestAfterPicosecond0(t *testing.T) {
 	layers := NewLayers(strings.NewReader(input))
-	p := NewPacket()
+	p := NewPacket(0)
 	sev, moved, _ := layers.Picosecond(p)
 	assert.Equal(t, 0, sev)
 	assert.True(t, moved)
@@ -28,7 +28,7 @@ func TestAfterPicosecond0(t *testing.T) {
 }
 func TestAfterPicosecond6(t *testing.T) {
 	layers := NewLayers(strings.NewReader(input))
-	p := NewPacket()
+	p := NewPacket(0)
 	layers.Picosecond(p)
 	sev, moved, _ := layers.Picosecond(p)
 	assert.Equal(t, 0, sev)
@@ -44,7 +44,7 @@ func TestAfterPicosecond6(t *testing.T) {
 }
 func TestStopMovingAfterPicosecond6(t *testing.T) {
 	layers := NewLayers(strings.NewReader(input))
-	p := NewPacket()
+	p := NewPacket(0)
 	layers.Picosecond(p)
 	layers.Picosecond(p)
 	layers.Picosecond(p)

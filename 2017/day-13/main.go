@@ -71,12 +71,28 @@ func (l *Layers) Picosecond(p *Packet) (severity int, moved bool, caught bool) {
 		severity = layer.Depth * layer.Range
 		caught = true
 	}
-	// fmt.Printf("Packet: %v\n", p)
 	for depth, _ := range l.m {
 		l.m[depth].Next()
-		// fmt.Printf("Layer: %#v\n", l.m[depth])
 	}
-	//fmt.Println("Packet: %v\nLayers: %v\n", p, l.ToString())
+	return
+}
+
+type PacketState struct {
+	Caught bool
+	Moved  bool
+}
+
+func (l *Layers) Picoseconds(packets []*Packet) (packetStates []PacketState) {
+	packetStates = make([]PacketState, len(packets))
+	for i, p := range packets {
+		packetStates[i].Moved = p.Move(l.max)
+		if layer := l.m[p.Layer]; layer != nil && layer.Current == 0 {
+			packetStates[i].Caught = true
+		}
+	}
+	for depth, _ := range l.m {
+		l.m[depth].Next()
+	}
 	return
 }
 func (l Layers) ToMap() map[int]int {
@@ -87,30 +103,24 @@ func (l Layers) ToMap() map[int]int {
 	return result
 }
 func (l *Layers) Wait() int {
+	l.reset()
+	packets := []*Packet{}
 	result := 0
 	for caught := true; caught; result++ {
 		if result%25 == 0 {
 			fmt.Printf("Try: %d\n", result)
 		}
-		p := NewPacket()
-		// var sev int
-		for i := 0; i < result; i++ {
-			l.Picosecond(NewPacket())
+		packets = append(packets, NewPacket(result))
+		states := l.Picoseconds(packets)
+		nextPackets := []*Packet{}
+		for i, state := range states {
+			if !state.Moved {
+				return packets[i].Rank
+			} else if !state.Caught && state.Moved {
+				nextPackets = append(nextPackets, packets[i])
+			}
 		}
-		var moved bool
-		picos := 0
-		for _, moved, caught = l.Picosecond(p); !caught && moved; _, moved, caught = l.Picosecond(p) {
-			// fmt.Printf("Picosecond: %d\n", picos)
-			picos++
-		}
-		// fmt.Printf("caught: %t (%d)\n", caught, picos)
-		// if sev == 0 && !moved {
-		// 	caught = false
-		// }
-		l.reset()
-		if !caught && !moved {
-			return result
-		}
+		packets = nextPackets
 	}
 	return result
 }
@@ -123,10 +133,11 @@ func (l *Layers) reset() {
 
 type Packet struct {
 	Layer int
+	Rank  int
 }
 
-func NewPacket() *Packet {
-	return &Packet{-1}
+func NewPacket(rank int) *Packet {
+	return &Packet{-1, rank}
 }
 func (p *Packet) Move(max int) bool {
 	if p.Layer == max {
@@ -138,9 +149,8 @@ func (p *Packet) Move(max int) bool {
 
 func main() {
 	f, _ := os.Open("input.txt")
-	// reader := bufio.NewReader(f)
 	layers := NewLayers(f)
-	packet := NewPacket()
+	packet := NewPacket(0)
 	totalSeverity := 0
 	for severity, moved, _ := layers.Picosecond(packet); moved; severity, moved, _ = layers.Picosecond(packet) {
 		totalSeverity = totalSeverity + severity
