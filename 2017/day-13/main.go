@@ -23,6 +23,10 @@ type Layer struct {
 	Direction direction
 }
 
+func (l *Layer) Reset() {
+	l.Current = 0
+	l.Direction = DOWN
+}
 func (l *Layer) Next() {
 	switch l.Direction {
 	case DOWN:
@@ -58,13 +62,14 @@ func NewLayers(in io.Reader) *Layers {
 	}
 	return &Layers{m: layers, max: max}
 }
-func (l *Layers) Picosecond(p *Packet) (severity int, moved bool) {
+func (l *Layers) Picosecond(p *Packet) (severity int, moved bool, caught bool) {
 	moved = p.Move(l.max)
 	if !moved {
 		return
 	}
 	if layer := l.m[p.Layer]; layer != nil && layer.Current == 0 {
 		severity = layer.Depth * layer.Range
+		caught = true
 	}
 	// fmt.Printf("Packet: %v\n", p)
 	for depth, _ := range l.m {
@@ -80,6 +85,40 @@ func (l Layers) ToMap() map[int]int {
 		result[depth] = layer.Range
 	}
 	return result
+}
+func (l *Layers) Wait() int {
+	result := 0
+	for caught := true; caught; result++ {
+		if result%25 == 0 {
+			fmt.Printf("Try: %d\n", result)
+		}
+		p := NewPacket()
+		// var sev int
+		for i := 0; i < result; i++ {
+			l.Picosecond(NewPacket())
+		}
+		var moved bool
+		picos := 0
+		for _, moved, caught = l.Picosecond(p); !caught && moved; _, moved, caught = l.Picosecond(p) {
+			// fmt.Printf("Picosecond: %d\n", picos)
+			picos++
+		}
+		// fmt.Printf("caught: %t (%d)\n", caught, picos)
+		// if sev == 0 && !moved {
+		// 	caught = false
+		// }
+		l.reset()
+		if !caught && !moved {
+			return result
+		}
+	}
+	return result
+}
+
+func (l *Layers) reset() {
+	for depth, _ := range l.m {
+		l.m[depth].Reset()
+	}
 }
 
 type Packet struct {
@@ -103,8 +142,11 @@ func main() {
 	layers := NewLayers(f)
 	packet := NewPacket()
 	totalSeverity := 0
-	for severity, moved := layers.Picosecond(packet); moved; severity, moved = layers.Picosecond(packet) {
+	for severity, moved, _ := layers.Picosecond(packet); moved; severity, moved, _ = layers.Picosecond(packet) {
 		totalSeverity = totalSeverity + severity
 	}
 	fmt.Printf("Total severity: %d\n", totalSeverity)
+	layers.reset()
+
+	fmt.Printf("Wait: %d\n", layers.Wait())
 }
