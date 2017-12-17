@@ -26,6 +26,6 @@ func TestCircularBufferStepAndInsertTwoTimes(t *testing.T) {
 func TestSpinlock9Times(t *testing.T) {
 	buf := NewCircularBuffer()
 	lock := NewSpinlock(3, buf)
-	assert.Equal(t, 5, lock.spinUntil(9))
+	assert.Equal(t, 5, lock.SpinUntil(9))
 	assert.Equal(t, []int{0, 9, 5, 7, 2, 4, 3, 8, 6, 1}, buf.buf)
 }
