@@ -14,6 +14,9 @@ type FakeMoveObserver struct {
 func (m *FakeMoveObserver) DoMove(move string) {
 	m.Moves = append(m.Moves, move)
 }
+func (m *FakeMoveObserver) Order() string {
+	return ""
+}
 
 func TestParse(t *testing.T) {
 	input := `abc,def,gh/i,j/kl
@@ -62,4 +65,13 @@ func TestParseSample(t *testing.T) {
 	parser := NewParser(strings.NewReader(input), dancers)
 	parser.Parse()
 	assert.Equal(t, "baedc", dancers.Order())
+}
+
+func TestParseSampleManyTimes(t *testing.T) {
+	input := `s1,x3/4,pe/b
+  `
+	dancers := NewDancers(5)
+	parser := NewParser(strings.NewReader(input), dancers)
+	parser.Parsex(2)
+	assert.Equal(t, "ceadb", dancers.Order())
 }
