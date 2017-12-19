@@ -27,5 +27,7 @@ func TestMatch(t *testing.T) {
 
 func TestMaze(t *testing.T) {
 	maze := ParseMaze(strings.NewReader(input))
-	assert.Equal(t, "ABCDEF", maze.Follow())
+	r, i := maze.Follow()
+	assert.Equal(t, "ABCDEF", r)
+	assert.Equal(t, 38, i)
 }

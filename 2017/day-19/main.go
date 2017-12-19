@@ -12,7 +12,8 @@ import (
 func main() {
 	f, _ := os.Open("input.txt")
 	maze := ParseMaze(f)
-	fmt.Printf("Word: %s\n", maze.Follow())
+	res, nb := maze.Follow()
+	fmt.Printf("Word: %s in %d\n", res, nb)
 }
 
 type Direction int
@@ -62,7 +63,7 @@ func findStart(chars []string) int {
 	return -1
 }
 
-func (m *Maze) Follow() string {
+func (m *Maze) Follow() (string, int) {
 	max := 5000000000
 	i := 0
 	m.position = m.start
@@ -74,9 +75,9 @@ func (m *Maze) Follow() string {
 			result = result + s
 			// fmt.Printf("Word: %s\n", result)
 		}
-		// i++
+		i++
 	}
-	return result
+	return result, i
 }
 func match(pattern string, s string) bool {
 	match, err := regexp.MatchString(pattern, s)
