@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -31,13 +30,10 @@ func TestDistanceOrigin(t *testing.T) {
 `)).Particles[0]
 	assert.Equal(t, 3, particle.DistanceOrigin())
 	particle.Move()
-	fmt.Printf("(p=%#v, v=%#v, a=%#v)\n", particle.P, particle.V, particle.A)
 	assert.Equal(t, 3, particle.DistanceOrigin())
 	particle.Move()
-	fmt.Printf("(p=%#v, v=%#v, a=%#v)\n", particle.P, particle.V, particle.A)
 	assert.Equal(t, 17, particle.DistanceOrigin())
 	particle.Move()
-	fmt.Printf("(p=%#v, v=%#v, a=%#v)\n", particle.P, particle.V, particle.A)
 	assert.Equal(t, 39, particle.DistanceOrigin())
 }
 func TestClosest(t *testing.T) {
@@ -45,4 +41,12 @@ func TestClosest(t *testing.T) {
 p=<4,0,0>, v=<0,0,0>, a=<-2,0,0>
 `))
 	assert.Equal(t, 0, particles.Closest())
+}
+func TestCollides(t *testing.T) {
+	particles := NewParticles(strings.NewReader(`p=<-6,0,0>, v=<3,0,0>, a=<0,0,0>
+p=<-4,0,0>, v=<2,0,0>, a=<0,0,0>
+p=<-2,0,0>, v=<1,0,0>, a=<0,0,0>
+p=<3,0,0>, v=<-1,0,0>, a=<0,0,0>
+`))
+	assert.Equal(t, 1, particles.Collides())
 }

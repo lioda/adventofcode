@@ -13,7 +13,8 @@ import (
 func main() {
 	f, _ := os.Open("input.txt")
 	particles := NewParticles(f)
-	fmt.Printf("Closest particle: %d\n", particles.Closest())
+	// fmt.Printf("Closest particle: %d\n", particles.Closest())
+	fmt.Printf("After collision, stay %d particles\n", particles.Collides())
 }
 
 type Coordinates struct {
@@ -64,7 +65,7 @@ func parseCoord(s string) *Coordinates {
 func (ps Particles) Closest() int {
 	count := 0
 	lastClosest := -1
-	for count < 99999 {
+	for count < 999 {
 		minDist := -1
 		closest := -1
 		for i, p := range ps.Particles {
@@ -84,4 +85,45 @@ func (ps Particles) Closest() int {
 		// fmt.Printf("Closest: %d, (p=%#v, v=%#v, a=%#v)\n", lastClosest, ps.Particles[lastClosest].P, ps.Particles[lastClosest].V, ps.Particles[lastClosest].A)
 	}
 	return lastClosest
+}
+
+func (ps *Particles) Collides() int {
+	turnSinceLastCollide := 0
+
+	particles := map[Particle]bool{}
+	for _, p := range ps.Particles {
+		particles[p] = true
+	}
+
+	for turnSinceLastCollide < 999 {
+		positions := map[Coordinates]Particle{}
+		collides := false
+		for p := range particles {
+			if _, exists := positions[*p.P]; exists {
+				fmt.Printf("Collision %#v!\n", p.P)
+				// particles[p] = false
+				// particles[positions[*p.P]] = false
+				delete(particles, p)
+				delete(particles, positions[*p.P])
+				collides = true
+			} else {
+				positions[*p.P] = p
+				// particles[p] = true
+			}
+			p.Move()
+		}
+		if collides {
+			turnSinceLastCollide = 0
+		} else {
+			turnSinceLastCollide++
+		}
+		// fmt.Printf("turn %d\n", turnSinceLastCollide)
+	}
+	result := 0
+	for _, active := range particles {
+		if active {
+			result++
+		}
+	}
+	return result
 }
