@@ -14,6 +14,9 @@ func main() {
 	prog := NewProgram(rules)
 	prog.Iterate(5)
 	fmt.Printf("%d on after 5 iterations\n", prog.Count())
+	prog = NewProgram(rules)
+	prog.Iterate(18)
+	fmt.Printf("%d on after 18 iterations\n", prog.Count())
 }
 
 type Program struct {
