@@ -29,6 +29,18 @@ func TestInfectAndClean(t *testing.T) {
 	grid.Clean(Cell{1, 1})
 	assert.Equal(t, CLEAN, grid.Get(Cell{1, 1}))
 }
+func TestNextStatus(t *testing.T) {
+	grid := NewGrid(strings.NewReader(input))
+	assert.Equal(t, CLEAN, grid.Get(Cell{0, 0}))
+	grid.NextStatus(Cell{0, 0})
+	assert.Equal(t, WEAKENED, grid.Get(Cell{0, 0}))
+	grid.NextStatus(Cell{0, 0})
+	assert.Equal(t, INFECTED, grid.Get(Cell{0, 0}))
+	grid.NextStatus(Cell{0, 0})
+	assert.Equal(t, FLAGGED, grid.Get(Cell{0, 0}))
+	grid.NextStatus(Cell{0, 0})
+	assert.Equal(t, CLEAN, grid.Get(Cell{0, 0}))
+}
 
 func TestFirstBurst(t *testing.T) {
 	grid := NewGrid(strings.NewReader(input))
@@ -52,6 +64,12 @@ func TestTurnRight(t *testing.T) {
 	assert.Equal(t, LEFT, DOWN.TurnRight())
 	assert.Equal(t, UP, LEFT.TurnRight())
 }
+func TestReverse(t *testing.T) {
+	assert.Equal(t, DOWN, UP.Reverse())
+	assert.Equal(t, LEFT, RIGHT.Reverse())
+	assert.Equal(t, UP, DOWN.Reverse())
+	assert.Equal(t, RIGHT, LEFT.Reverse())
+}
 func TestMove(t *testing.T) {
 	assert.Equal(t, Cell{0, 1}, UP.Move(Cell{0, 0}))
 	assert.Equal(t, Cell{1, 0}, RIGHT.Move(Cell{0, 0}))
@@ -69,4 +87,14 @@ func TestAllBursts(t *testing.T) {
 	grid := NewGrid(strings.NewReader(input))
 	virus := NewVirusCarrier(grid)
 	assert.Equal(t, 5587, virus.Bursts(10000))
+}
+func TestVirusEvolved100(t *testing.T) {
+	grid := NewGrid(strings.NewReader(input))
+	virus := NewVirusEvolved(grid)
+	assert.Equal(t, 26, virus.Bursts(100))
+}
+func TestVirusEvolved10000000(t *testing.T) {
+	grid := NewGrid(strings.NewReader(input))
+	virus := NewVirusEvolved(grid)
+	assert.Equal(t, 2511944, virus.Bursts(10000000))
 }
