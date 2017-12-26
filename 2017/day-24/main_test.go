@@ -51,9 +51,14 @@ func TestBridgeAccept(t *testing.T) {
 	accepted, bridge = bridge.Accept(Component{2, 6})
 	accepted, bridge = bridge.Accept(Component{4, 6})
 	assert.False(t, accepted)
+	assert.Equal(t, 4, bridge.Length())
 }
 
 func TestStrongestBridge(t *testing.T) {
 	comps := ParseComponents(strings.NewReader(input))
 	assert.Equal(t, 31, BuildStrongestBridge(comps))
+}
+func TestStrongestLongestBridge(t *testing.T) {
+	comps := ParseComponents(strings.NewReader(input))
+	assert.Equal(t, 19, BuildStrongestLongestBridge(comps))
 }

@@ -12,7 +12,8 @@ import (
 func main() {
 	f, _ := os.Open("input.txt")
 	comps := ParseComponents(f)
-	fmt.Printf("Stringest bridge: %d\n", BuildStrongestBridge(comps))
+	fmt.Printf("Strongest bridge: %d\n", BuildStrongestBridge(comps))
+	fmt.Printf("Strongest of longest bridges: %d\n", BuildStrongestLongestBridge(comps))
 }
 
 type Component struct {
@@ -57,7 +58,7 @@ func (b Bridge) Display() {
 		s = s + sep + c
 		sep = "--"
 	}
-	fmt.Printf("(%d) %s\n", b.Strength(), s)
+	fmt.Printf("(%d - %d) %s\n", b.Length(), b.Strength(), s)
 }
 
 func (b Bridge) Strength() int {
@@ -66,6 +67,9 @@ func (b Bridge) Strength() int {
 		result = result + comp.port1 + comp.port2
 	}
 	return result
+}
+func (b Bridge) Length() int {
+	return len(b.chain)
 }
 func (b Bridge) Accept(comp Component) (bool, Bridge) {
 	if accept := comp.Matches(b.last); !accept || b.used[comp] {
@@ -90,11 +94,17 @@ func NewBridge() Bridge {
 
 func BuildStrongestBridge(comps []Component) int {
 	bridge := NewBridge()
-	return buildBridge(bridge, comps)
+	return buildStrongestBridge(bridge, comps)
+	// return 0
+}
+func BuildStrongestLongestBridge(comps []Component) int {
+	bridge := NewBridge()
+	_, strongest := buildStrongestLongestBridge(bridge, comps)
+	return strongest
 	// return 0
 }
 
-func buildBridge(bridge Bridge, comps []Component) int {
+func buildStrongestBridge(bridge Bridge, comps []Component) int {
 	// pins := bridge.LastPin()
 	// bridge.Display()
 	strongest := bridge.Strength()
@@ -103,9 +113,26 @@ func buildBridge(bridge Bridge, comps []Component) int {
 		if !accepted {
 			continue
 		}
-		if strength := buildBridge(bridge2, comps); strength > strongest {
+		if strength := buildStrongestBridge(bridge2, comps); strength > strongest {
 			strongest = strength
 		}
 	}
 	return strongest
+}
+func buildStrongestLongestBridge(bridge Bridge, comps []Component) (int, int) {
+	// pins := bridge.LastPin()
+	// bridge.Display()
+	longest := bridge.Length()
+	strongest := bridge.Strength()
+	for _, comp := range comps {
+		accepted, bridge2 := bridge.Accept(comp)
+		if !accepted {
+			continue
+		}
+		if length, strength := buildStrongestLongestBridge(bridge2, comps); length >= longest && strength > strongest {
+			longest = length
+			strongest = strength
+		}
+	}
+	return longest, strongest
 }
