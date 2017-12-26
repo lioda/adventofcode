@@ -52,14 +52,15 @@ type Program struct {
 	instrs     []ProgramInstr
 	registers  map[string]int
 	ip         int
-	lastSound  int
 	mulCounter int
+	debug      []string
 }
 
-func (p *Program) ExecuteInstr() bool {
+func (p *Program) ExecuteInstr(i int) bool {
 	if p.ip >= len(p.instrs) {
 		return false
 	}
+	fmt.Printf("(%d) ip=%d, debug=<%s>, registers=%v\n", i, p.ip, p.debug[p.ip], p.printRegisters())
 	instr := p.instrs[p.ip]
 	movedIp := instr.instr(instr.op1, instr.op2)
 	if !movedIp {
@@ -68,17 +69,29 @@ func (p *Program) ExecuteInstr() bool {
 	return true
 }
 
+func (p *Program) printRegisters() string {
+	result := ""
+	for _, k := range []string{"a", "b", "c", "d", "e", "f", "g", "h"} {
+		result = fmt.Sprintf("%s, %s=%d", result, k, p.registers[k])
+	}
+	return result
+}
+
 func (p *Program) ExecuteUntilEnd() int {
-	for executed := p.ExecuteInstr(); executed; executed = p.ExecuteInstr() {
-		// fmt.Printf("ip=%d, registers=%v, sound=%d\n", p.ip, p.registers, p.lastSound)
+	i := 0
+	for executed := p.ExecuteInstr(i); executed && i < 10000000; executed = p.ExecuteInstr(i) {
+
+		i++
 	}
 	return p.mulCounter
 }
 func NewProgram(r io.Reader) *Program {
 	reader := bufio.NewReader(r)
 	instrs := []ProgramInstr{}
-	result := Program{instrs, map[string]int{}, 0, 0, 0}
+	debug := []string{}
+	result := Program{instrs, map[string]int{"a": 1}, 0, 0, debug}
 	for line, _, _ := reader.ReadLine(); line != nil; line, _, _ = reader.ReadLine() {
+		debug = append(debug, string(line))
 		split := strings.SplitN(string(line), " ", 3)
 		if len(split) < 3 {
 			split = append(split, "")
@@ -98,12 +111,14 @@ func NewProgram(r io.Reader) *Program {
 		}
 		instrs = append(instrs, ProgramInstr{instr, split[1], split[2]})
 	}
+	result.debug = debug
 	result.instrs = instrs
 	return &result
 }
 
 func main() {
-	f, _ := os.Open("input.txt")
+	f, _ := os.Open("input0.txt")
 	p := NewProgram(f)
 	fmt.Printf("Mul has been called %d times\n", p.ExecuteUntilEnd())
+	fmt.Printf("Register H value is %d\n", p.registers["h"])
 }
