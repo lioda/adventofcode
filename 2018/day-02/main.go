@@ -18,6 +18,8 @@ func main() {
 	if exo == "a" {
 		fmt.Println(checksum(ids))
 	} else if exo == "b" {
+		s1, s2 := findWordsWithOneDifference(ids)
+		fmt.Println(commonLetters(s1, s2))
 	}
 }
 
@@ -57,4 +59,39 @@ func hasLetterTwice(s string) (two int, three int) {
 		}
 	}
 	return
+}
+
+func findWordsWithOneDifference(ids []string) (string, string) {
+	for curr, s1 := range ids {
+		for i := curr + 1; i < len(ids)-1; i++ {
+			s2 := ids[i]
+			if countDifferences(s1, s2) == 1 {
+				return s1, s2
+			}
+		}
+	}
+	return "", ""
+}
+
+func countDifferences(s1, s2 string) int {
+	// fmt.Println("count ", s1, "/", s2)
+	count := 0
+	for i := 0; i < len(s1); i++ {
+		// fmt.Println("compare ", s1[i], "/", s2[i])
+		if s1[i] != s2[i] {
+			count++
+		}
+	}
+	// fmt.Println(count)
+	return count
+}
+
+func commonLetters(s1, s2 string) string {
+	result := ""
+	for i := 0; i < len(s1); i++ {
+		if s1[i] == s2[i] {
+			result += string(s1[i])
+		}
+	}
+	return result
 }

@@ -15,3 +15,13 @@ func TestWhenReadFileThenReturnsStringArray(t *testing.T) {
 func TestWhenChecksumThenReturnTwoAndThreeMultiplied(t *testing.T) {
 	assert.Equal(t, 12, checksum([]string{"abcdef", "bababc", "abbcde", "abcccd", "aabcdd", "abcdee", "ababab"}))
 }
+
+func TestWhenFindWordsWithOneDifferenceThenReturnTwoIds(t *testing.T) {
+	a, b := findWordsWithOneDifference([]string{"abcde", "fghij", "klmno", "pqrst", "fguij", "axcye", "wvxyz"})
+	assert.Equal(t, "fghij", a)
+	assert.Equal(t, "fguij", b)
+}
+
+func TestWhenPrintCommonLettersThenReturnsCommonLettersInOrder(t *testing.T) {
+	assert.Equal(t, "fgij", commonLetters("fghij", "fguij"))
+}
