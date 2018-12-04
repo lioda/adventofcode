@@ -23,6 +23,7 @@ fn main() -> io::Result<()> {
     if mode == "a" {
         println!("{:?}", find_max_sleeper_guard(&lines));
     } else if mode == "b" {
+        println!("{:?}", find_guard_most_asleep_at_same_minute(&lines));
     }
 
     Ok(())
@@ -86,6 +87,80 @@ fn find_max_sleeper_guard(lines: &[&str]) -> u32 {
     let guard = guards.values().max_by_key(|g| g.total_sleep()).unwrap();
 
     guard.id * guard.minute_most_asleep()
+}
+
+fn find_guard_most_asleep_at_same_minute(lines: &[&str]) -> u32 {
+    let mut guards_by_date: HashMap<NaiveDate, u32> = HashMap::new();
+    let mut guards: HashMap<u32, Guard> = HashMap::new();
+
+    println!("begins");
+    for line in lines {
+        if line.len() == 0 {
+            continue;
+        }
+        let line_tuple = parse_line(line);
+        if line_tuple.0 == LineType::Begin {
+            let id = line_tuple.2 as u32;
+            guards_by_date.insert(line_tuple.1, id);
+            if !guards.contains_key(&id) {
+                let guard = Guard {
+                    id: id,
+                    day: line_tuple.1,
+                    sleeps2: HashMap::new(),
+                };
+                guards.insert(id, guard);
+            }
+        }
+    }
+
+    println!("asleep");
+    for line in lines {
+        if line.len() == 0 {
+            continue;
+        }
+        let line_tuple = parse_line(line);
+        if line_tuple.0 == LineType::Asleep {
+            let id_for_date = guards_by_date
+                .get(&line_tuple.1)
+                .expect("no guard at this date");
+            let guard = guards.get_mut(id_for_date).expect("no guard for this id");
+            guard.add(line_tuple.0, line_tuple.1, line_tuple.3);
+        }
+    }
+
+    println!("wakes up");
+    for line in lines {
+        if line.len() == 0 {
+            continue;
+        }
+        // println!("parse {:?}", line);
+        let line_tuple = parse_line(line);
+        if line_tuple.0 == LineType::WakesUp {
+            let id_for_date = guards_by_date
+                .get(&line_tuple.1)
+                .expect("no guard at this date");
+            let guard = guards.get_mut(id_for_date).expect("no guard for this id");
+            guard.add(line_tuple.0, line_tuple.1, line_tuple.3);
+        }
+    }
+
+    // let guard = guards.values().max_by_key(|g| g.total_sleep()).unwrap();
+    let mut max_min = 0;
+    let mut max_total = 0;
+    let mut id: u32 = 0;
+    for min in 0..59 {
+        for guard in guards.values() {
+            let total = guard.total_asleep_at_minute(min);
+            if total > max_total {
+                max_min = min;
+                max_total = total;
+                id = guard.id;
+            }
+        }
+    }
+    id * max_min
+
+    // guard.id * guard.minute_most_asleep()
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -165,6 +240,16 @@ impl Guard {
             })
             .unwrap()
             .0
+    }
+
+    fn total_asleep_at_minute(self: &Guard, min: u32) -> u32 {
+        let time = NaiveTime::from_hms(0, min, 0);
+        self.sleeps2
+            .values()
+            .flatten()
+            .filter(|t| t.0 <= time && t.1 > time)
+            .map(|_| 1)
+            .sum()
     }
 }
 
@@ -285,6 +370,10 @@ mod tests {
         println!("===== TEST {:?}", guard);
         assert_eq!(guard.total_sleep(), 50);
         assert_eq!(guard.minute_most_asleep(), 24);
+
+        assert_eq!(guard.total_asleep_at_minute(24), 2);
+        assert_eq!(guard.total_asleep_at_minute(10), 1);
+        assert_eq!(guard.total_asleep_at_minute(57), 0);
     }
 
     #[test]
@@ -310,38 +399,30 @@ mod tests {
             "",
         ]);
         assert_eq!(guard, 10 * 24);
-        // assert_eq!(
-        //     guards,
-        //     vec![
-        //         Guard {
-        //             id: 10,
-        //             day: NaiveDate::from_ymd(1518, 11, 1),
-        //             sleeps: vec!(
-        //                 (NaiveTime::from_hms(0, 5, 0), NaiveTime::from_hms(0, 25, 0)),
-        //                 (NaiveTime::from_hms(0, 30, 0), NaiveTime::from_hms(0, 55, 0))
-        //             ),
-        //         },
-        //         Guard {
-        //             id: 99,
-        //             day: NaiveDate::from_ymd(1518, 11, 2),
-        //             sleeps: vec!((NaiveTime::from_hms(0, 40, 0), NaiveTime::from_hms(0, 50, 0))),
-        //         },
-        //         Guard {
-        //             id: 10,
-        //             day: NaiveDate::from_ymd(1518, 11, 3),
-        //             sleeps: vec!((NaiveTime::from_hms(0, 24, 0), NaiveTime::from_hms(0, 29, 0))),
-        //         },
-        //         Guard {
-        //             id: 99,
-        //             day: NaiveDate::from_ymd(1518, 11, 4),
-        //             sleeps: vec!((NaiveTime::from_hms(0, 36, 0), NaiveTime::from_hms(0, 46, 0))),
-        //         },
-        //         Guard {
-        //             id: 99,
-        //             day: NaiveDate::from_ymd(1518, 11, 5),
-        //             sleeps: vec!((NaiveTime::from_hms(0, 45, 0), NaiveTime::from_hms(0, 55, 0))),
-        //         },
-        //     ]
-        // );
+    }
+
+    #[test]
+    fn test_find_guard_most_asleep_at_same_minute() {
+        let guard = find_guard_most_asleep_at_same_minute(&[
+            "[1518-11-01 00:25] wakes up",
+            "[1518-11-01 00:05] falls asleep",
+            "[1518-11-01 00:00] Guard #10 begins shift",
+            "[1518-11-01 23:58] Guard #99 begins shift",
+            "[1518-11-01 00:30] falls asleep",
+            "[1518-11-01 00:55] wakes up",
+            "[1518-11-02 00:40] falls asleep",
+            "[1518-11-02 00:50] wakes up",
+            "[1518-11-03 00:05] Guard #10 begins shift",
+            "[1518-11-03 00:24] falls asleep",
+            "[1518-11-04 00:02] Guard #99 begins shift",
+            "[1518-11-04 00:36] falls asleep",
+            "[1518-11-05 00:03] Guard #99 begins shift",
+            "[1518-11-03 00:29] wakes up",
+            "[1518-11-04 00:46] wakes up",
+            "[1518-11-05 00:45] falls asleep",
+            "[1518-11-05 00:55] wakes up]);",
+            "",
+        ]);
+        assert_eq!(guard, 99 * 45);
     }
 }
