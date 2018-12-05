@@ -1,0 +1,77 @@
+use std::env;
+use std::fs;
+use std::io;
+
+fn main() -> io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        panic!("a or b ?");
+    }
+    let mode = &args[1];
+
+    let input = fs::read_to_string("src/input.txt")?;
+    // let ids: Vec<&str> = f.split("\n").collect();
+
+    if mode == "a" {
+        // let mut polys = (String::from(input), 1);
+        // while polys.1 > 0 {
+        //     polys = reacting_polymers(&polys.0);
+        // }
+        println!("{:?}", full_reaction(&input));
+    } else if mode == "b" {
+    }
+
+    Ok(())
+}
+
+fn full_reaction(input: &str) -> u32 {
+    let mut polys = (String::from(input), 1);
+    while polys.1 > 0 {
+        polys = reacting_polymers(&polys.0);
+    }
+    polys.0.len() as u32 - 1
+}
+
+fn reacting_polymers(input: &str) -> (String, u32) {
+    let mut out = String::new();
+    let mut count = 0;
+    let mut last_char: char = 0 as char;
+
+    for c in input.chars() {
+        if c != last_char
+            && (c == last_char.to_ascii_lowercase() || c == last_char.to_ascii_uppercase())
+        {
+            last_char = 0 as char;
+            count += 1;
+        } else {
+            if last_char != 0 as char {
+                out.push(last_char);
+            }
+            last_char = c;
+        }
+    }
+    out.push('\n');
+    (out, count)
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_reacting_polymers() {
+        assert_eq!(
+            reacting_polymers("dabAcCaCBAcCcaDA\n"),
+            (String::from("dabAaCBAcaDA\n"), 2)
+        );
+    }
+    #[test]
+    fn test_reacting_polymers_no_match() {
+        assert_eq!(reacting_polymers("aabAAB\n"), (String::from("aabAAB\n"), 0));
+    }
+    #[test]
+    fn test_full_reaction() {
+        assert_eq!(full_reaction("dabAcCaCBAcCcaDA\n"), 10);
+    }
+}
