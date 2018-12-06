@@ -18,6 +18,7 @@ fn main() -> io::Result<()> {
     if mode == "a" {
         println!("{:?}", find_max_size(&lines));
     } else if mode == "b" {
+        println!("{:?}", find_closest_region(10000, &lines));
     }
 
     Ok(())
@@ -116,6 +117,48 @@ fn find_max_size(input: &[&str]) -> u32 {
     // cells.values().map(|v| v.len()).max().expect("no max") as u32 + 1
 }
 
+fn find_closest_region(total_distance: u32, input: &[&str]) -> u32 {
+    let dangers = parse_points(input);
+    let bounds = boundaries(&dangers);
+
+    // let mut cells: HashMap<Point, Vec<Point>> = HashMap::new();
+    let mut distances: HashMap<Point, u32> = HashMap::new();
+    for x in bounds.min_x..=bounds.max_x {
+        for y in bounds.min_y..=bounds.max_y {
+            let p = Point { x: x, y: y };
+            // if dangers.contains(&p) {
+            //     continue;
+            // }
+
+            let total: u32 = dangers.iter().map(|location| p.distance(location)).sum();
+            println!("{:?} : {}", p, total);
+            if total < total_distance {
+                distances.insert(p, total);
+            }
+            // let c = dangers
+            //     .iter()
+            //     .fold((1000000, &Point { x: 0, y: 0 }), |r, danger| {
+            //         let d = p.distance(danger);
+            //         /*if d == 0 {
+            //             return r;
+            //         } else */
+            //         if d < r.0 {
+            //             return (d, danger);
+            //         }
+            //         r
+            //     });
+            // let closest = c.1;
+            // println!("closest {}/{} => {:?}", x, y, closest);
+            // cells.entry(closest.clone()).or_insert(Vec::new()).push(p);
+        }
+    }
+
+    // distances.values().filter(|d| d < &&total_distance).count() as u32
+    distances.values().count() as u32
+
+    // 0
+}
+
 fn parse_points(input: &[&str]) -> Vec<Point> {
     let mut result = Vec::new();
     for line in input {
@@ -204,10 +247,17 @@ mod tests {
     }
 
     #[test]
-    fn test_reacting_polymers() {
+    fn test_find_max_size() {
         assert_eq!(
             find_max_size(&["1, 1", "1, 6", "8, 3", "3, 4", "5, 5", "8, 9", ""]),
             17
+        );
+    }
+    #[test]
+    fn test_find_closest_region() {
+        assert_eq!(
+            find_closest_region(32, &["1, 1", "1, 6", "8, 3", "3, 4", "5, 5", "8, 9", ""]),
+            16
         );
     }
 }
