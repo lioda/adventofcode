@@ -118,6 +118,7 @@ impl Steps {
             .links
             .iter()
             .filter(|link| link.before == last)
+            .filter(|link| !self.is_unavailable(&link.after, used))
             .map(|link| link.after.clone())
             .filter(|step| !used.contains(step))
             .filter(|step| !working.contains(step))
@@ -125,6 +126,10 @@ impl Steps {
         heads.append(&mut nexts);
         heads
     }
+
+    // fn all_previous_complete(self: &Steps,link: Link, used: &str) -> bool {
+    //
+    // }
 
     fn is_unavailable(self: &Steps, step: &str, used: &str) -> bool {
         let count_before = self
@@ -219,7 +224,7 @@ fn split_steps(input: &[&str], add: u32, count_workers: u32) -> (u32, String) {
     let mut possibilities: Vec<String> = Vec::new();
     let mut last: Vec<String> = vec![String::from("")];
 
-    while result.len() < steps.len() && seconds < 20 {
+    while result.len() < steps.len() && seconds < 300000 {
         println!("==== second {:?}", seconds);
 
         workers = workers
@@ -283,7 +288,7 @@ fn split_steps(input: &[&str], add: u32, count_workers: u32) -> (u32, String) {
                         return None;
                     }
                     let step = possibilities.remove(0).clone();
-                    let duration = step.chars().next().expect("char") as u32 - 'A' as u32 + 1;
+                    let duration = step.chars().next().expect("char") as u32 - 'A' as u32 + 1 + add;
                     let task = (duration, step);
                     println!("worker start {:?}", task);
                     return Some(task);
@@ -299,7 +304,7 @@ fn split_steps(input: &[&str], add: u32, count_workers: u32) -> (u32, String) {
         seconds += 1;
     }
 
-    (seconds, result)
+    (seconds - 1, result)
 }
 
 #[cfg(test)]
@@ -360,6 +365,28 @@ mod tests {
                 ""
             ]),
             "CADFGBE"
+        );
+    }
+
+    #[test]
+    fn test_split_steps_many_heads() {
+        assert_eq!(
+            split_steps(
+                &[
+                    "Step C must be finished before step A can begin.",
+                    "Step C must be finished before step F can begin.",
+                    "Step A must be finished before step B can begin.",
+                    "Step A must be finished before step D can begin.",
+                    "Step B must be finished before step E can begin.",
+                    "Step D must be finished before step E can begin.",
+                    "Step F must be finished before step E can begin.",
+                    "Step G must be finished before step B can begin.",
+                    ""
+                ],
+                0,
+                2
+            ),
+            (19, String::from("CAGDBFE"))
         );
     }
 }
