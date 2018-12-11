@@ -18,12 +18,13 @@ fn main() -> io::Result<()> {
     if mode == "a" {
         println!("coord : {:?}", find1(6548));
     } else if mode == "b" {
+        println!("coord : {:?}", find2(6548));
     }
 
     Ok(())
 }
 
-fn find1(serial_number: u32) -> (usize, usize) {
+fn init(serial_number: u32) -> Vec<Vec<i32>> {
     let mut grid: Vec<Vec<i32>> = Vec::new();
     for y in 1..=300 {
         let mut row = Vec::new();
@@ -32,7 +33,7 @@ fn find1(serial_number: u32) -> (usize, usize) {
         }
         grid.push(row);
     }
-    find_square_3_3(grid)
+    grid
 }
 
 fn compute_cell(x: usize, y: usize, serial_number: u32) -> i32 {
@@ -42,27 +43,60 @@ fn compute_cell(x: usize, y: usize, serial_number: u32) -> i32 {
     hundreds_digit.to_string().parse::<i32>().expect("parse") - 5
 }
 
-fn find_square_3_3(grid: Vec<Vec<i32>>) -> (usize, usize) {
-    let max_y = grid.len() - 3;
-    let max_x = grid[0].len() - 3;
+fn find1(serial_number: u32) -> (usize, usize) {
+    let grid = init(serial_number);
+    let coord = find_square(&grid, 3).0;
+    (coord.0, coord.1)
+}
+
+fn find2(serial_number: u32) -> (usize, usize, usize) {
+    let mut grid: Vec<Vec<i32>> = Vec::new();
+    for y in 1..=300 {
+        let mut row = Vec::new();
+        for x in 1..=300 {
+            row.push(compute_cell(x, y, serial_number));
+        }
+        grid.push(row);
+    }
+    let mut max = ((0, 0, 0), 0);
+    let mut last = 0;
+    for size in 1..300 {
+        println!("size {:?}...", size);
+        let max_for_size = find_square(&grid, size);
+        println!("====> {:?}", max_for_size);
+        if max_for_size.1 > max.1 {
+            max = (
+                ((max_for_size.0).0, (max_for_size.0).1, size),
+                max_for_size.1,
+            );
+        } else if max_for_size.1 < last {
+            break;
+        }
+        last = max_for_size.1;
+    }
+    max.0
+}
+
+fn find_square(grid: &Vec<Vec<i32>>, size: usize) -> ((usize, usize), i32) {
+    let max_y = grid.len() - size;
+    let max_x = grid[0].len() - size;
 
     let mut result = ((0, 0), 0);
     for y in 0..max_y {
         for x in 0..max_x {
-            let row1 = &grid[y];
-            let row2 = &grid[y + 1];
-            let row3 = &grid[y + 2];
-            let value = sum(row1, x) + sum(row2, x) + sum(row3, x);
+            let value = grid[y..y + size]
+                .iter()
+                .fold(0, |r, row| r + sum_x(row, x, size));
             if value > result.1 {
                 result = ((x + 1, y + 1), value);
             }
         }
     }
-    result.0
+    result
 }
 
-fn sum(row: &Vec<i32>, x: usize) -> i32 {
-    row[x] + row[x + 1] + row[x + 2]
+fn sum_x(row: &Vec<i32>, x: usize, size: usize) -> i32 {
+    row[x..x + size].iter().sum()
 }
 
 #[cfg(test)]
@@ -79,20 +113,27 @@ mod tests {
     #[test]
     fn test_find_square() {
         assert_eq!(
-            find_square_3_3(vec![
-                vec![-2, -4, 4, 4, 4],
-                vec![-4, 4, 4, 4, -5],
-                vec![4, 3, 3, 4, -4],
-                vec![1, 1, 2, 4, -3],
-                vec![-1, 0, 2, -5, -2],
-            ]),
-            (2, 2)
+            find_square(
+                &vec![
+                    vec![-2, -4, 4, 4, 4],
+                    vec![-4, 4, 4, 4, -5],
+                    vec![4, 3, 3, 4, -4],
+                    vec![1, 1, 2, 4, -3],
+                    vec![-1, 0, 2, -5, -2],
+                ],
+                3
+            ),
+            ((2, 2), 29)
         );
     }
 
     #[test]
-    fn test_find1_1() {
+    fn test_find1() {
         assert_eq!(find1(18), (33, 45));
         assert_eq!(find1(42), (21, 61));
+    }
+    #[test]
+    fn test_find2() {
+        assert_eq!(find2(18), (90, 269, 16));
     }
 }
