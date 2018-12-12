@@ -23,6 +23,10 @@ fn main() -> io::Result<()> {
         // }
         println!("result : {:?}", Plants::new(&lines).goto_generation(20));
     } else if mode == "b" {
+        println!(
+            "result : {:?}",
+            Plants::new(&lines).goto_generation2(50000000000)
+        );
     }
 
     Ok(())
@@ -66,7 +70,7 @@ impl Plants {
         }
     }
 
-    fn goto_generation(&mut self, generation: u32) -> (String, i32) {
+    fn goto_generation(&mut self, generation: u64) -> (String, i32) {
         // let mut new_state_display = String::new();
         // let mut count = 0;
         let mut result = (String::new(), 0);
@@ -74,7 +78,26 @@ impl Plants {
             let gen = self.next_generation();
             self.state = gen.2;
             result = (gen.0, gen.1);
-            println!("gen {} : {:?}", igen + 1, result);
+            if (igen) % 1000 == 0 {
+                println!("gen {} : {:?}", igen + 1, result);
+            }
+        }
+        result
+        // (new_state_display, count)
+    }
+    fn goto_generation2(&mut self, generation: u64) -> i32 {
+        // let mut new_state_display = String::new();
+        // let mut count = 0;
+        let mut result = 0;
+        for igen in 0..generation {
+            let gen = self.next_generation2();
+            self.state = gen.1;
+            result = gen.0;
+            if (igen + 1) % 1000 == 0 || (igen + 1) == 20 {
+                println!("\ngen {} : {:?}", igen + 1, result);
+            }/* else {
+                print!("{:?} ", igen);
+            }*/
         }
         result
         // (new_state_display, count)
@@ -142,6 +165,70 @@ impl Plants {
             String::from(new_state_display.trim_matches('.')),
             count,
             new_state,
+        )
+    }
+
+    fn next_generation2(&self) -> (i32, HashMap<i32, String>) {
+        let min = self.state.iter().map(|e| e.0).min().expect("min") - 2;
+        let max = self.state.iter().map(|e| e.0).max().expect("max") + 2;
+
+        // let mut new_state_display = String::new();
+        let mut new_state: HashMap<i32, String> = HashMap::new();
+        let mut count = 0;
+
+        for i in min..=max {
+            let l2 = self
+                .state
+                .get(&(i - 2))
+                .map(|s| s.clone())
+                .unwrap_or(String::from("."));
+            let l1 = self
+                .state
+                .get(&(i - 1))
+                .map(|s| s.clone())
+                .unwrap_or(String::from("."));
+            let curr = self
+                .state
+                .get(&i)
+                .map(|s| s.clone())
+                .unwrap_or(String::from("."));
+            let r1 = self
+                .state
+                .get(&(i + 1))
+                .map(|s| s.clone())
+                .unwrap_or(String::from("."));
+            let r2 = self
+                .state
+                .get(&(i + 2))
+                .map(|s| s.clone())
+                .unwrap_or(String::from("."));
+
+            let mut pattern = String::new();
+            pattern.push_str(&l2);
+            pattern.push_str(&l1);
+            pattern.push_str(&curr);
+            pattern.push_str(&r1);
+            pattern.push_str(&r2);
+
+            let replacement = self
+                .patterns
+                .get(&pattern)
+                .map(|s| s.clone())
+                .unwrap_or(String::from("."));
+            // .expect(&format!("find pattern {}", pattern));
+
+            // self.state.entry(i); //.insert(i, replacement.clone());
+            // new_state_display.push_str(&replacement);
+            // println!("{} / {:?}", i, replacement);
+            if replacement == "#" {
+                count += i;
+            }
+            new_state.insert(i, replacement);
+        }
+        // self.state = new_state;
+        (
+            // String::from(new_state_display.trim_matches('.')),
+            count, new_state,
         )
     }
 }
