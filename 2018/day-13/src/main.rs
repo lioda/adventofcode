@@ -30,7 +30,7 @@ fn exo1(input: &[&str]) -> (usize, usize) {
     let (grid, carts) = init_grid(input);
     let mut carts = carts;
 
-    loop {
+    for _ in 0..1000 {
         let (collision, new_carts) = tick(&grid, &carts);
         carts = new_carts;
         if collision.is_some() {
@@ -45,15 +45,23 @@ fn init_grid(input: &[&str]) -> (Vec<Vec<String>>, HashMap<(usize, usize), Cart>
     let mut grid: Vec<Vec<String>> = Vec::new();
     let mut carts: HashMap<(usize, usize), Cart> = HashMap::new();
     for y in 0..input.len() {
+        let line = input[y];
         let mut row: Vec<String> = Vec::new();
-        for x in 0..input[0].len() {
+        // for x in 0..input[0].len() {
+        // println!("char : {:?}", input[y]);
+        for x in 0..line.len() {
+            // for ch in line.chars() {
+            let s = line.to_string();
+            let ch = s.get(x..x + 1).expect("char");
+            // println!("char : {:?}", ch);
             row.push(
-                match input[y] {
+                match ch {
                     ">" | "<" => {
                         carts.insert(
                             (x, y),
                             Cart {
-                                direction: input[y].to_string(),
+                                direction: ch.to_string(),
+                                intersection_count: 0,
                             },
                         );
                         "-"
@@ -62,17 +70,18 @@ fn init_grid(input: &[&str]) -> (Vec<Vec<String>>, HashMap<(usize, usize), Cart>
                         carts.insert(
                             (x, y),
                             Cart {
-                                direction: input[y].to_string(),
+                                direction: ch.to_string(),
+                                intersection_count: 0,
                             },
                         );
                         "|"
                     }
-                    _ => input[y],
+                    _ => ch,
                 }
                 .to_string()
-                .get(x..x + 1)
-                .expect("get char in input")
-                .to_string(),
+                // .get(x..x + 1)
+                // .expect("get char in input")
+                // .to_string(),
             );
         }
         if row.len() == 0 {
@@ -80,6 +89,7 @@ fn init_grid(input: &[&str]) -> (Vec<Vec<String>>, HashMap<(usize, usize), Cart>
         }
         grid.push(row);
     }
+    // println!("init : {:?}\n{:?}", grid, carts);
     (grid, carts)
 }
 
@@ -87,16 +97,24 @@ fn tick(
     grid: &Vec<Vec<String>>,
     carts: &HashMap<(usize, usize), Cart>,
 ) -> (Option<(usize, usize)>, HashMap<(usize, usize), Cart>) {
+    // println!("========= tick ===========\n{:?}", carts);
+    let mut old_carts: HashMap<(usize, usize), Cart> = carts.clone();
     let mut new_carts: HashMap<(usize, usize), Cart> = HashMap::new();
 
     for y in 0..grid.len() {
-        for x in 0..grid[0].len() {
+        for x in 0..grid[y].len() {
             let position = (x, y);
             if !carts.contains_key(&position) {
                 continue;
             }
             let cart = carts.get(&position).expect("obtain cart");
-            let (new_pos, new_cart, collision) = cart.next(position, grid);
+            old_carts.remove(&position);
+            let (new_pos, new_cart, _) = cart.next(position, grid);
+            // println!(
+            //     "move {:?}({:?}) => {:?}({:?})",
+            //     cart, position, new_cart, new_pos
+            // );
+            let collision = old_carts.contains_key(&new_pos) || new_carts.contains_key(&new_pos);
             new_carts.insert(new_pos, new_cart);
             if collision {
                 return (Some(new_pos), new_carts);
@@ -104,11 +122,13 @@ fn tick(
         }
     }
 
+    // println!("== end : {:?}", new_carts);
     (None, new_carts)
 }
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct Cart {
     direction: String,
+    intersection_count: u32,
 }
 
 impl Cart {
@@ -124,7 +144,11 @@ impl Cart {
             _ => (pos.0, pos.1 - 1),
         };
 
+        if grid[next_pos.1].len() < next_pos.0 {
+            panic!(format!("IMPOSSIBLE{:?}\n{:?}", next_pos, grid[next_pos.1]));
+        }
         let next_cell = &grid[next_pos.1][next_pos.0];
+        let mut next_intersection_count = self.intersection_count;
 
         let next_direction = match next_cell.as_str() {
             r"\" => match dir.as_str() {
@@ -137,25 +161,32 @@ impl Cart {
                 "v" | "^" => self.left_or_right(next_pos.0, next_pos.1, grid),
                 _ => dir,
             },
+            "+" => {
+                next_intersection_count += 1;
+                self.resolve_intersection()
+            }
             _ => dir,
         };
-        println!("next dir : {:?}", next_direction);
+        // println!("next dir {:?} : {:?}", next_cell, next_direction);
 
         (
             next_pos,
             Cart {
-                direction: /*self.direction.clone(),*/ next_direction.to_string(),
+                direction: next_direction.to_string(),
+                intersection_count: next_intersection_count,
             },
             false,
         )
     }
 
     fn up_or_down(&self, x: usize, y: usize, grid: &Vec<Vec<String>>) -> String {
+        let filter = |c: &&str| *c == "|" || *c == "+";
+
         let up = if y > 0 {
             grid.get(y - 1)
                 .and_then(|row| row.get(x).clone())
                 .map(|s| s.as_str())
-                .filter(|c| *c != " ")
+                .filter(filter)
                 .map(|_| "^")
         } else {
             None
@@ -164,10 +195,10 @@ impl Cart {
             .get(y + 1)
             .and_then(|row| row.get(x))
             .map(|s| s.as_str())
-            .filter(|c| *c != " ")
+            .filter(filter)
             .map(|_| "v");
 
-        println!("{:?} ou {:?} ? ", up, down);
+        // println!("up or down {}, {} => {:?} ou {:?} ? ", x, y, up, down);
 
         up.or_else(|| down)
             .expect(r"< | > : up or down")
@@ -175,11 +206,13 @@ impl Cart {
     }
 
     fn left_or_right(&self, x: usize, y: usize, grid: &Vec<Vec<String>>) -> String {
+        let filter = |c: &&str| *c == "-" || *c == "+";
+
         let left = if x > 0 {
             grid.get(y)
                 .and_then(|row| row.get(x - 1).clone())
                 .map(|s| s.as_str())
-                .filter(|c| *c != " ")
+                .filter(filter)
                 .map(|_| "<")
         } else {
             None
@@ -188,14 +221,37 @@ impl Cart {
             .get(y)
             .and_then(|row| row.get(x + 1))
             .map(|s| s.as_str())
-            .filter(|c| *c != " ")
+            .filter(filter)
             .map(|_| ">");
 
-        println!("{:?} ou {:?} ? ", left, right);
+        // println!("left or right {}, {} => {:?} ou {:?} ? ", x, y, left, right);
 
         left.or_else(|| right)
             .expect(r"^ | v : left or right")
             .to_string()
+    }
+
+    fn resolve_intersection(&self) -> String {
+        let left = vec![(">", "^"), ("^", "<"), ("<", "v"), ("v", ">")];
+        let right = vec![(">", "v"), ("^", ">"), ("<", "^"), ("v", "<")];
+        let curr = self.direction.clone();
+        if self.intersection_count % 3 == 1 {
+            curr
+        } else {
+            if self.intersection_count % 3 == 0 {
+                left
+            } else {
+                right
+            }
+            .iter()
+            .filter(|tuple| tuple.0 == curr)
+            .map(|t| t.1)
+            .nth(0)
+            .expect("resolve_intersection")
+            .to_string()
+        }
+
+        // "^".to_string()
     }
 }
 
@@ -221,6 +277,7 @@ mod tests {
     fn newcart(dir: &str) -> Cart {
         Cart {
             direction: dir.to_string(),
+            intersection_count: 0,
         }
     }
 
@@ -284,19 +341,65 @@ mod tests {
         );
     }
 
+    fn cart(s: &str, intersect: u32) -> Cart {
+        Cart {
+            direction: s.to_string(),
+            intersection_count: intersect,
+        }
+    }
+
+    #[test]
+    fn test_next_cart_intersection() {
+        assert_eq!(
+            newcart(">").next((0, 1), &grid(&[&r" | ", &r"-+-", &r" | "])),
+            ((1, 1), cart("^", 1), false)
+        );
+    }
+
+    #[test]
+    fn test_next_cart_resolve_intersections() {
+        assert_eq!(cart(">", 0).resolve_intersection(), "^");
+        assert_eq!(cart(">", 1).resolve_intersection(), ">");
+        assert_eq!(cart(">", 2).resolve_intersection(), "v");
+        assert_eq!(cart(">", 3).resolve_intersection(), "^");
+
+        assert_eq!(cart("<", 0).resolve_intersection(), "v");
+        assert_eq!(cart("<", 1).resolve_intersection(), "<");
+        assert_eq!(cart("<", 2).resolve_intersection(), "^");
+        assert_eq!(cart("<", 3).resolve_intersection(), "v");
+
+        assert_eq!(cart("^", 0).resolve_intersection(), "<");
+        assert_eq!(cart("^", 1).resolve_intersection(), "^");
+        assert_eq!(cart("^", 2).resolve_intersection(), ">");
+        assert_eq!(cart("^", 3).resolve_intersection(), "<");
+
+        assert_eq!(cart("v", 0).resolve_intersection(), ">");
+        assert_eq!(cart("v", 1).resolve_intersection(), "v");
+        assert_eq!(cart("v", 2).resolve_intersection(), "<");
+        assert_eq!(cart("v", 3).resolve_intersection(), ">");
+    }
+
     // #[test]
-    // fn test_generation_1() {
+    // fn test_next_makes_crash() {
     //     assert_eq!(
-    //         exo1(&[
-    //             &r"/->-\",
-    //             &r"|   |  /----\",
-    //             &r"| /-+--+-\  |",
-    //             &r"| | |  | v  |",
-    //             &r"\-+-/  \-+--/",
-    //             &r"  \------/",
-    //         ]),
-    //         (7, 3)
+    //         newcart(">").next((0, 0), &grid(&[&r"---"])),
+    //         ((1, 1), newcart("^"), false)
     //     );
     // }
+
+    #[test]
+    fn test_exo1_1() {
+        assert_eq!(
+            exo1(&[
+                &r"/->-\",
+                &r"|   |  /----\",
+                &r"| /-+--+-\  |",
+                &r"| | |  | v  |",
+                &r"\-+-/  \-+--/",
+                &r"  \------/",
+            ]),
+            (7, 3)
+        );
+    }
 
 }
