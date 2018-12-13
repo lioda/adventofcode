@@ -113,7 +113,7 @@ struct Cart {
 
 impl Cart {
     fn next(&self, pos: (usize, usize), grid: &Vec<Vec<String>>) -> ((usize, usize), Cart, bool) {
-        let cell = &grid[pos.1][pos.0];
+        // let cell = &grid[pos.1][pos.0];
 
         let dir = self.direction.clone();
 
@@ -127,57 +127,17 @@ impl Cart {
         let next_cell = &grid[next_pos.1][next_pos.0];
 
         let next_direction = match next_cell.as_str() {
-            r"\" => {
-                match dir.as_str() {
-                    ">" | "<" => {
-                        let up = if next_pos.1 > 0 {
-                            grid.get(next_pos.1 - 1)
-                                .and_then(|row| row.get(next_pos.0).clone())
-                                .map(|s| s.as_str())
-                                .filter(|c| *c != " ")
-                                .map(|_| "^")
-                        } else {
-                            None
-                        };
-                        let down = grid
-                            .get(next_pos.1 + 1)
-                            .and_then(|row| row.get(next_pos.0))
-                            .map(|s| s.as_str())
-                            .filter(|c| *c != " ")
-                            .map(|_| "v");
-
-                        println!("{:?} ou {:?} ? ", up, down);
-
-                        up.or_else(|| down)
-                            .expect(r"< | > \ : up or down")
-                            .to_string()
-                        // ""
-                    }
-                    _ => dir,
-                }
-                // ""
-                // match self.direction.as_str() {
-                //     ">" => "v"
-                //     "<" => "v"
-                //     "^" => "v"
-                //     _ => "v"
-                // }
-                //         if self.direction == ">" {
-                //             "v"
-                //         }else if self.direction
-                //          else {
-                //             "<"
-                //         }
-                //     }
-                //     r"/" => {
-                //         if self.direction == "<" {
-                //             "v"
-                //         } else {
-                //             ">"
-                //         }
-            }
+            r"\" => match dir.as_str() {
+                ">" | "<" => self.up_or_down(next_pos.0, next_pos.1, grid),
+                "v" | "^" => self.left_or_right(next_pos.0, next_pos.1, grid),
+                _ => dir,
+            },
+            r"/" => match dir.as_str() {
+                ">" | "<" => self.up_or_down(next_pos.0, next_pos.1, grid),
+                "v" | "^" => self.left_or_right(next_pos.0, next_pos.1, grid),
+                _ => dir,
+            },
             _ => dir,
-            // }
         };
         println!("next dir : {:?}", next_direction);
 
@@ -188,6 +148,54 @@ impl Cart {
             },
             false,
         )
+    }
+
+    fn up_or_down(&self, x: usize, y: usize, grid: &Vec<Vec<String>>) -> String {
+        let up = if y > 0 {
+            grid.get(y - 1)
+                .and_then(|row| row.get(x).clone())
+                .map(|s| s.as_str())
+                .filter(|c| *c != " ")
+                .map(|_| "^")
+        } else {
+            None
+        };
+        let down = grid
+            .get(y + 1)
+            .and_then(|row| row.get(x))
+            .map(|s| s.as_str())
+            .filter(|c| *c != " ")
+            .map(|_| "v");
+
+        println!("{:?} ou {:?} ? ", up, down);
+
+        up.or_else(|| down)
+            .expect(r"< | > : up or down")
+            .to_string()
+    }
+
+    fn left_or_right(&self, x: usize, y: usize, grid: &Vec<Vec<String>>) -> String {
+        let left = if x > 0 {
+            grid.get(y)
+                .and_then(|row| row.get(x - 1).clone())
+                .map(|s| s.as_str())
+                .filter(|c| *c != " ")
+                .map(|_| "<")
+        } else {
+            None
+        };
+        let right = grid
+            .get(y)
+            .and_then(|row| row.get(x + 1))
+            .map(|s| s.as_str())
+            .filter(|c| *c != " ")
+            .map(|_| ">");
+
+        println!("{:?} ou {:?} ? ", left, right);
+
+        left.or_else(|| right)
+            .expect(r"^ | v : left or right")
+            .to_string()
     }
 }
 
@@ -237,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn test_next_cart_2() {
+    fn test_next_cart_horizontal() {
         assert_eq!(
             newcart(">").next((0, 0), &grid(&[&r"-\", &r" |"])),
             ((1, 0), newcart("v"), false)
@@ -245,6 +253,34 @@ mod tests {
         assert_eq!(
             newcart("<").next((1, 1), &grid(&[&r"| ", &r"\-"])),
             ((0, 1), newcart("^"), false)
+        );
+        assert_eq!(
+            newcart(">").next((0, 1), &grid(&[&r" |", &r"-/"])),
+            ((1, 1), newcart("^"), false)
+        );
+        assert_eq!(
+            newcart("<").next((1, 0), &grid(&[&r"/-", &r"| "])),
+            ((0, 0), newcart("v"), false)
+        );
+    }
+
+    #[test]
+    fn test_next_cart_vertical() {
+        assert_eq!(
+            newcart("v").next((1, 0), &grid(&[&r" |", &r"-/"])),
+            ((1, 1), newcart("<"), false)
+        );
+        assert_eq!(
+            newcart("^").next((0, 1), &grid(&[&r"/-", &r"| "])),
+            ((0, 0), newcart(">"), false)
+        );
+        assert_eq!(
+            newcart("v").next((0, 0), &grid(&[&r"| ", &r"\-"])),
+            ((0, 1), newcart(">"), false)
+        );
+        assert_eq!(
+            newcart("^").next((1, 1), &grid(&[&r"-\", &r" | "])),
+            ((1, 0), newcart("<"), false)
         );
     }
 
