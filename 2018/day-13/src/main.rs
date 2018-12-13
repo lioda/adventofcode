@@ -18,6 +18,7 @@ fn main() -> io::Result<()> {
     if mode == "a" {
         println!("result : {:?}", exo1(&lines));
     } else if mode == "b" {
+        println!("result : {:?}", exo2(&lines));
         // println!(
         //     "result : {:?}",
         //     Plants::new(&lines).goto_generation2(50000000000)
@@ -36,6 +37,33 @@ fn exo1(input: &[&str]) -> (usize, usize) {
         if collision.is_some() {
             return collision.unwrap();
         }
+    }
+
+    (0, 0)
+}
+fn exo2(input: &[&str]) -> (usize, usize) {
+    let (grid, carts) = init_grid(input);
+    let mut carts = carts;
+
+    for i in 0..1000000 {
+        let new_carts = tick2(&grid, &carts);
+        carts = new_carts;
+
+        if i % 100 == 0 {
+            println!("new carts {:?}", carts.len());
+        }
+        // if collision.is_some() {
+        //     return collision.unwrap();
+        // }
+        if carts.len() == 1 {
+            break;
+        }
+    }
+
+    if carts.len() == 1 {
+        return *carts.keys().nth(0).expect("result exo 2");
+    } else {
+        println!("{:?}", carts.len());
     }
 
     (0, 0)
@@ -125,6 +153,46 @@ fn tick(
     // println!("== end : {:?}", new_carts);
     (None, new_carts)
 }
+
+fn tick2(
+    grid: &Vec<Vec<String>>,
+    carts: &HashMap<(usize, usize), Cart>,
+) -> HashMap<(usize, usize), Cart> {
+    // println!("========= tick ===========\n{:?}", carts);
+    let mut old_carts: HashMap<(usize, usize), Cart> = carts.clone();
+    let mut new_carts: HashMap<(usize, usize), Cart> = HashMap::new();
+
+    let mut collisions = Vec::new();
+
+    for y in 0..grid.len() {
+        for x in 0..grid[y].len() {
+            let position = (x, y);
+            if !carts.contains_key(&position) || collisions.contains(&position) {
+                continue;
+            }
+            let cart = carts.get(&position).expect("obtain cart");
+            old_carts.remove(&position);
+            let (new_pos, new_cart, _) = cart.next(position, grid);
+            // println!(
+            //     "move {:?}({:?}) => {:?}({:?})",
+            //     cart, position, new_cart, new_pos
+            // );
+            let collision = old_carts.contains_key(&new_pos) || new_carts.contains_key(&new_pos);
+            if collision {
+                // return (Some(new_pos), new_carts);
+                collisions.push(new_pos);
+                new_carts.remove(&new_pos);
+            } else {
+                new_carts.insert(new_pos, new_cart);
+            }
+        }
+    }
+
+    // println!("== end : {:?}", new_carts);
+    // (None, new_carts)
+    new_carts
+}
+
 #[derive(Clone, PartialEq, Eq, Debug)]
 struct Cart {
     direction: String,
@@ -399,6 +467,22 @@ mod tests {
                 &r"  \------/",
             ]),
             (7, 3)
+        );
+    }
+
+    #[test]
+    fn test_exo2_1() {
+        assert_eq!(
+            exo2(&[
+                &r"/>-<\  ",
+                &r"|   |  ",
+                &r"| /<+-\",
+                &r"| | | v",
+                &r"\>+</ |",
+                &r"  |   ^",
+                &r"  \<->/",
+            ]),
+            (6, 4)
         );
     }
 
