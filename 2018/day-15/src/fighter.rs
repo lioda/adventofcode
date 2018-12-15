@@ -50,7 +50,7 @@ impl GridCell {
     pub fn get_hp(&self) -> i32 {
         match self {
             GridCell::Unit { character: _, hp } => *hp,
-            _ => -1,
+            _ => 0,
         }
     }
 

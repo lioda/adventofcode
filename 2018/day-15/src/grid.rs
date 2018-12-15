@@ -3,7 +3,7 @@
 // use fighter::Unit;
 use fighter::{Character, GridCell};
 use position::Position;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 // use std::any::Any;
 use unitsinturn::UnitsInTurn;
 
@@ -42,23 +42,6 @@ impl Grid {
     }
 
     pub fn start_turn(&mut self) {
-        // let positions: Vec<Position> = self
-        //     .grid
-        //     .iter()
-        //     .enumerate()
-        //     .flat_map(|(y, row)| {
-        //         let create_pos = move |x| Position::new(x, y);
-        //         row.iter()
-        //             .enumerate()
-        //             .map(move |(x, cell)| match cell.is_unit() {
-        //                 true => Some(create_pos(x)),
-        //                 false => None,
-        //             })
-        //     })
-        //     .filter(|c| c.is_some())
-        //     .map(|o| o.unwrap())
-        //     .collect();
-
         let positions = self.filtered_positions(|c| c.is_unit());
         self.units_in_turn = UnitsInTurn::new(positions);
     }
@@ -73,28 +56,23 @@ impl Grid {
                 let positions: Vec<Position> = row
                     .iter()
                     .enumerate()
-                    // .map(|(x, cell)| Some(create_pos(x)))
                     .filter_map(|(x, cell)| match predicate(cell) {
                         true => Some(create_pos(x)),
                         false => None,
                     })
                     .collect();
-                // .collect();
                 positions
             })
-            // .map(|o| o.unwrap())
             .collect();
         result
     }
 
     pub fn next_unit_to_play(&mut self) -> Option<Position> {
-        // Some(Position::new(0, 0))
-        //Some(self.units_in_turn[0].clone())
         self.units_in_turn.next()
     }
 
     fn is_reachable(&self, from: &Position, to: &Position) -> bool {
-        let mut breaker = 99;
+        let mut breaker = 99999;
         let mut visited: HashSet<Position> = HashSet::new();
         let mut nodes = vec![to.clone()];
         while nodes.len() > 0 && breaker > 0 {
@@ -102,13 +80,10 @@ impl Grid {
             let reachables = self.get_in_range(&node);
             let new_nodes: Vec<&Position> =
                 reachables.iter().filter(|p| !visited.contains(p)).collect();
-            // visited.append();
-            // new_nodes.iter()
             if new_nodes.contains(&from) {
                 return true;
             }
             for pos in new_nodes {
-                // nodes.append(&mut new_nodes);
                 nodes.push(pos.clone());
                 visited.insert(pos.clone());
             }
@@ -120,19 +95,72 @@ impl Grid {
         false
     }
 
-    pub fn find_move_step(&self, from: &Position) -> Position {
+    pub fn find_move_step(&self, from: &Position) -> Option<Position> {
         let unit = self.get(&from);
 
         let foes = self.filtered_positions(|c| c.is_foe(unit));
-        let foes: Vec<Position> = foes
+        let reachable_nearests: Vec<Position> = foes
             .iter()
             .flat_map(|foe| self.get_in_range(foe))
             .filter(|p| self.is_reachable(p, &from))
             .collect();
 
-        let target = from.closest(&foes);
-        let result = target.closest(&self.get_in_range(&from));
-        println!("go from {:?} to {:?} by {:?}", from, target, result);
+        if reachable_nearests.len() == 0 {
+            return None;
+        }
+
+        let target = from.closest(&reachable_nearests);
+        let result = self.find_shortests_steps(from, &target);
+        // println!("go from {:?} to {:?} by {:?}", from, target, result);
+        Some(result)
+    }
+
+    fn find_shortests_steps(&self, from: &Position, to: &Position) -> Position {
+        let mut scores: HashMap<Position, u32> = HashMap::new();
+        scores.insert(to.clone(), 0);
+        let mut nodes = vec![(to.clone(), 0)];
+
+        while nodes.len() > 0 {
+            let node = nodes.pop().expect("node in nodes for steps");
+            let mut new_nodes = Vec::new();
+            let reachables = self.get_in_range(&node.0);
+            let score = node.1 + 1;
+            for reachable in reachables {
+                if scores.contains_key(&reachable) {
+                    let current_score = scores.get_mut(&reachable).expect("current score");
+                    if *current_score > score {
+                        *current_score = score;
+                        new_nodes.push((reachable, score));
+                    }
+                } else {
+                    scores.insert(reachable.clone(), score);
+                    new_nodes.push((reachable, score));
+                }
+            }
+            nodes.append(&mut new_nodes);
+        }
+
+        let steps = self.get_in_range(from);
+        let mut result = Position::new(999999, 999999);
+        let mut min = 99999999;
+        for step in steps {
+            // println!(
+            //     "----- {:?} move to {:?} ? => {:?}",
+            //     from,
+            //     step,
+            //     scores.get(&step)
+            // );
+            match scores.get(&step) {
+                None => (),
+                Some(score) => {
+                    if *score < min || (*score == min && step.before(&result)) {
+                        // result.push(step);
+                        result = step;
+                        min = *score;
+                    }
+                }
+            }
+        }
         result
     }
 
@@ -149,9 +177,6 @@ impl Grid {
     }
 
     pub fn move_unit_from_to(&mut self, from: &Position, to: &Position) {
-        // let unit = &self.get(from);
-        // self.put_empty(from);
-        // self.put(to, unit.clone());
         let unit = self.grid[from.y][from.x].clone();
         self.grid[from.y][from.x] = Box::new(GridCell::Empty);
         self.grid[to.y][to.x] = unit;
@@ -170,18 +195,24 @@ impl Grid {
         self.get_foes_in_range(pos).len() > 0
     }
     pub fn do_attack(&mut self, pos: &Position) {
-        println!("{:?} is attacking", pos);
-        let foes = self.get_foes_in_range(pos);
-        let foe_pos = foes
-            .iter()
-            .min_by_key(|p| self.get(p).get_hp())
-            .expect("foe to attack");
+        // println!("{:?} is attacking", pos);
+        let foes_pos = self.get_foes_in_range(pos);
+        let mut foe_pos = Position::new(999999, 999999);
+        let mut min_hp = 99999999;
+        for foe in foes_pos {
+            let hp = self.get(&foe).get_hp();
+            if hp < min_hp || (hp == min_hp && foe.before(&foe_pos)) {
+                min_hp = hp;
+                foe_pos = foe;
+            }
+        }
         let foe = &mut self.grid[foe_pos.y][foe_pos.x];
         foe.hit();
+        // println!("foe {:?} is hit {}", foe_pos, foe.get_hp());
         if foe.is_dead() {
-            // self.grid[foe_pos.y][foe_pos.x] = Box::new(GridCell::Empty);
+            // println!("foe {:?} is dead", foe_pos);
             *foe = Box::new(GridCell::Empty);
-            self.units_in_turn.remove(foe_pos);
+            self.units_in_turn.remove(&foe_pos);
         }
     }
 
@@ -262,7 +293,7 @@ mod tests {
         let grid = Grid::new(&vec!["#######", "#.E...#", "#.....#", "#...G.#", "#######"]);
         assert_eq!(
             grid.find_move_step(&Position::new(2, 1)),
-            Position::new(3, 1)
+            Some(Position::new(3, 1))
         );
     }
     //fn find_move_step_with_unreachable(){}
@@ -277,8 +308,50 @@ mod tests {
         ]);
         assert_eq!(
             grid.find_move_step(&Position::new(2, 1)),
-            Position::new(2, 2)
+            Some(Position::new(2, 2))
         );
+    }
+
+    #[test]
+    fn find_move_step_with_trap() {
+        let grid = Grid::new(&vec![
+            "#######", //
+            "#..E.##", //
+            "#...#G#", //
+            "#.....#", //
+            "#######",
+        ]);
+        assert_eq!(
+            grid.find_move_step(&Position::new(3, 1)),
+            Some(Position::new(3, 2))
+        );
+    }
+
+    #[test]
+    fn find_move_step_many_shorts() {
+        let grid = Grid::new(&vec![
+            "#######", //
+            "#.E...#", //
+            "#.....#", //
+            "#...G.#", //
+            "#######",
+        ]);
+        assert_eq!(
+            grid.find_move_step(&Position::new(2, 1)),
+            Some(Position::new(3, 1))
+        );
+    }
+
+    #[test]
+    fn find_no_move_step() {
+        let grid = Grid::new(&vec![
+            "#######", //
+            "#.E#..#", //
+            "###.#.#", //
+            "#...G.#", //
+            "#######",
+        ]);
+        assert_eq!(grid.find_move_step(&Position::new(2, 1)), None);
     }
     #[test]
     fn can_attack() {

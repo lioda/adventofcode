@@ -24,6 +24,7 @@ impl Position {
     }
 
     pub fn closest(&self, positions: &[Position]) -> Position {
+        // println!("hesitate between {:?}", positions);
         let mut result = &Position::new(999999, 999999);
         let mut shortest = 99999999;
         for position in positions {
