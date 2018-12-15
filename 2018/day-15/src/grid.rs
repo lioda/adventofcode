@@ -3,6 +3,7 @@
 // use fighter::Unit;
 use fighter::{Character, GridCell};
 use position::Position;
+use std::collections::HashSet;
 // use std::any::Any;
 use unitsinturn::UnitsInTurn;
 
@@ -92,11 +93,42 @@ impl Grid {
         self.units_in_turn.next()
     }
 
+    fn is_reachable(&self, from: &Position, to: &Position) -> bool {
+        let mut breaker = 99;
+        let mut visited: HashSet<Position> = HashSet::new();
+        let mut nodes = vec![to.clone()];
+        while nodes.len() > 0 && breaker > 0 {
+            let node = nodes.pop().expect("where is my node ?");
+            let reachables = self.get_in_range(&node);
+            let new_nodes: Vec<&Position> =
+                reachables.iter().filter(|p| !visited.contains(p)).collect();
+            // visited.append();
+            // new_nodes.iter()
+            if new_nodes.contains(&from) {
+                return true;
+            }
+            for pos in new_nodes {
+                // nodes.append(&mut new_nodes);
+                nodes.push(pos.clone());
+                visited.insert(pos.clone());
+            }
+            breaker -= 1;
+        }
+        if breaker <= 0 {
+            panic!("BROKEN ARROW");
+        }
+        false
+    }
+
     fn find_move_step(&self, from: Position) -> Position {
         let unit = self.get(&from);
 
         let foes = self.filtered_positions(|c| c.is_foe(unit));
-        let foes: Vec<Position> = foes.iter().flat_map(|foe| self.get_in_range(foe)).collect();
+        let foes: Vec<Position> = foes
+            .iter()
+            .flat_map(|foe| self.get_in_range(foe))
+            .filter(|p| self.is_reachable(p, &from))
+            .collect();
         let mut nearest = Position::new(999999, 999999);
         let mut shortest_distance = 999999999;
         for p in foes {
@@ -109,6 +141,7 @@ impl Grid {
         }
 
         let target = nearest;
+        println!("go from {:?} to {:?}", from, target);
         let mut result = Position::new(999999, 999999);
         let mut shortest = 99999999;
         for step in self.get_in_range(&from) {
@@ -124,7 +157,7 @@ impl Grid {
             //     step.before(&result)
             // );
             if dist <= shortest && step.before(&result) {
-                println!("====== {:?}", true);
+                // println!("====== {:?}", true);
                 result = step;
                 shortest = dist;
             }
@@ -181,13 +214,27 @@ mod tests {
 
     #[test]
     fn find_move_step() {
-        let mut grid = Grid::new(&vec!["#######", "#.E...#", "#.....#", "#...G.#", "#######"]);
+        let grid = Grid::new(&vec!["#######", "#.E...#", "#.....#", "#...G.#", "#######"]);
         assert_eq!(
             grid.find_move_step(Position::new(2, 1)),
             Position::new(3, 1)
         );
     }
     //fn find_move_step_with_unreachable(){}
+    #[test]
+    fn find_move_step_with_unreachable() {
+        let grid = Grid::new(&vec![
+            "#######", //
+            "#.E#.G#", //
+            "#...#.#", //
+            "#...G.#", //
+            "#######",
+        ]);
+        assert_eq!(
+            grid.find_move_step(Position::new(2, 1)),
+            Position::new(2, 2)
+        );
+    }
 
     // #[test]
     // fn test_exo1() {}
