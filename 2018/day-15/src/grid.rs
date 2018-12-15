@@ -41,7 +41,7 @@ impl Grid {
         }
     }
 
-    fn start_turn(&mut self) {
+    pub fn start_turn(&mut self) {
         // let positions: Vec<Position> = self
         //     .grid
         //     .iter()
@@ -87,7 +87,7 @@ impl Grid {
         result
     }
 
-    fn next_unit_to_play(&mut self) -> Option<Position> {
+    pub fn next_unit_to_play(&mut self) -> Option<Position> {
         // Some(Position::new(0, 0))
         //Some(self.units_in_turn[0].clone())
         self.units_in_turn.next()
@@ -120,7 +120,7 @@ impl Grid {
         false
     }
 
-    fn find_move_step(&self, from: Position) -> Position {
+    pub fn find_move_step(&self, from: &Position) -> Position {
         let unit = self.get(&from);
 
         let foes = self.filtered_positions(|c| c.is_foe(unit));
@@ -129,41 +129,10 @@ impl Grid {
             .flat_map(|foe| self.get_in_range(foe))
             .filter(|p| self.is_reachable(p, &from))
             .collect();
-        let mut nearest = Position::new(999999, 999999);
-        let mut shortest_distance = 999999999;
-        for p in foes {
-            let dist = p.distance(&from);
-            // println!("dist {:?} / {:?} == {}", from, p, dist);
-            if dist <= shortest_distance && p.before(&nearest) {
-                nearest = p;
-                shortest_distance = dist;
-            }
-        }
 
-        let target = nearest;
-        println!("go from {:?} to {:?}", from, target);
-        let mut result = Position::new(999999, 999999);
-        let mut shortest = 99999999;
-        for step in self.get_in_range(&from) {
-            let dist = step.distance(&target);
-            // println!(
-            //     "{:?} / {:?} : {} ({}) && {:?} < {:?} == {}",
-            //     target,
-            //     step,
-            //     dist,
-            //     shortest,
-            //     step,
-            //     result,
-            //     step.before(&result)
-            // );
-            if dist <= shortest && step.before(&result) {
-                // println!("====== {:?}", true);
-                result = step;
-                shortest = dist;
-            }
-        }
-
-        // Position::new(0, 0)
+        let target = from.closest(&foes);
+        let result = target.closest(&self.get_in_range(&from));
+        println!("go from {:?} to {:?} by {:?}", from, target, result);
         result
     }
 
@@ -177,6 +146,82 @@ impl Grid {
 
     fn get(&self, p: &Position) -> &Box<GridCell> {
         &self.grid[p.y][p.x]
+    }
+
+    pub fn move_unit_from_to(&mut self, from: &Position, to: &Position) {
+        // let unit = &self.get(from);
+        // self.put_empty(from);
+        // self.put(to, unit.clone());
+        let unit = self.grid[from.y][from.x].clone();
+        self.grid[from.y][from.x] = Box::new(GridCell::Empty);
+        self.grid[to.y][to.x] = unit;
+    }
+
+    fn get_foes_in_range(&self, pos: &Position) -> Vec<Position> {
+        let me = self.get(pos);
+        vec![pos.add_y(-1), pos.add_y(1), pos.add_x(-1), pos.add_x(1)]
+            .iter()
+            .filter(|&p| self.get(p).is_foe(me))
+            .map(|p| p.clone())
+            .collect()
+    }
+
+    pub fn can_attack(&self, pos: &Position) -> bool {
+        self.get_foes_in_range(pos).len() > 0
+    }
+    pub fn do_attack(&mut self, pos: &Position) {
+        println!("{:?} is attacking", pos);
+        let foes = self.get_foes_in_range(pos);
+        let foe_pos = foes
+            .iter()
+            .min_by_key(|p| self.get(p).get_hp())
+            .expect("foe to attack");
+        let foe = &mut self.grid[foe_pos.y][foe_pos.x];
+        foe.hit();
+        if foe.is_dead() {
+            // self.grid[foe_pos.y][foe_pos.x] = Box::new(GridCell::Empty);
+            *foe = Box::new(GridCell::Empty);
+            self.units_in_turn.remove(foe_pos);
+        }
+    }
+
+    pub fn is_playable(&self) -> bool {
+        self.grid
+            .iter()
+            .flat_map(|row| row)
+            .any(|c| c.is_character(Character::Elf))
+            && self
+                .grid
+                .iter()
+                .flat_map(|row| row)
+                .any(|c| c.is_character(Character::Gobelin))
+        // false
+    }
+
+    pub fn hp_left(&self) -> i32 {
+        self.grid
+            .iter()
+            .flat_map(|row| row)
+            .map(|c| c.get_hp())
+            .sum()
+    }
+
+    /////////////////// display //////////////////
+    pub fn display(&self) {
+        self.grid.iter().for_each(|row| {
+            let mut hps = String::new();
+            row.iter().for_each(|c| {
+                // match c {
+                //     GridCell::Empty => (),
+                //     _ => (),
+                // }
+                // let a = *c;
+                // c.is_empty();
+                print!("{}", c.display());
+                hps.push_str(c.display_hitpoints().as_str());
+            });
+            println!(" {}", hps);
+        });
     }
 }
 
@@ -216,7 +261,7 @@ mod tests {
     fn find_move_step() {
         let grid = Grid::new(&vec!["#######", "#.E...#", "#.....#", "#...G.#", "#######"]);
         assert_eq!(
-            grid.find_move_step(Position::new(2, 1)),
+            grid.find_move_step(&Position::new(2, 1)),
             Position::new(3, 1)
         );
     }
@@ -231,9 +276,22 @@ mod tests {
             "#######",
         ]);
         assert_eq!(
-            grid.find_move_step(Position::new(2, 1)),
+            grid.find_move_step(&Position::new(2, 1)),
             Position::new(2, 2)
         );
+    }
+    #[test]
+    fn can_attack() {
+        let grid = Grid::new(&vec![
+            "##########", //
+            "#.EG.E.GG#", //
+            "##########", //
+        ]);
+        assert_eq!(grid.can_attack(&Position::new(2, 1)), true);
+        assert_eq!(grid.can_attack(&Position::new(3, 1)), true);
+        assert_eq!(grid.can_attack(&Position::new(5, 1)), false);
+        assert_eq!(grid.can_attack(&Position::new(7, 1)), false);
+        assert_eq!(grid.can_attack(&Position::new(8, 1)), false);
     }
 
     // #[test]

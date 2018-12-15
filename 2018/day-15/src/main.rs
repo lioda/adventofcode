@@ -35,9 +35,28 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn exo1(input: &[&str]) -> (u32, u32) {
-    let grid = Grid::new(input);
-    (0, 0)
+fn exo1(input: &[&str]) -> (i32, i32) {
+    let mut grid = Grid::new(input);
+    grid.display();
+    let mut breaker = 0;
+
+    while grid.is_playable() &&  breaker < 200 {
+        grid.start_turn();
+        while let Some(unit) = grid.next_unit_to_play() {
+            if grid.can_attack(&unit) {
+                grid.do_attack(&unit);
+            }else {
+                let goto = grid.find_move_step(&unit);
+                grid.move_unit_from_to(&unit, &goto);
+            }
+            // break;
+        }
+        breaker += 1;
+        println!("===================== step {:?}", breaker);
+        grid.display();
+    }
+
+    (breaker-1, grid.hp_left())
 }
 
 
@@ -51,7 +70,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore]
     fn test_exo1() {
         let input = &vec![
             "#######",

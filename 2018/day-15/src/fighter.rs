@@ -1,3 +1,4 @@
+#[derive(Clone, Debug)]
 pub enum GridCell {
     Wall,
     Empty,
@@ -23,6 +24,13 @@ impl GridCell {
         // false
     }
 
+    pub fn is_character(&self, ch: Character) -> bool {
+        match self {
+            GridCell::Unit { character, hp: _ } => *character == ch,
+            _ => false,
+        }
+    }
+
     pub fn is_unit(&self) -> bool {
         match self {
             GridCell::Unit {
@@ -37,6 +45,65 @@ impl GridCell {
             GridCell::Empty => true,
             _ => false,
         }
+    }
+
+    pub fn get_hp(&self) -> i32 {
+        match self {
+            GridCell::Unit { character: _, hp } => *hp,
+            _ => -1,
+        }
+    }
+
+    pub fn hit(&mut self) {
+        match self {
+            GridCell::Unit { character: _, hp } => {
+                *hp -= 3;
+            }
+            _ => (),
+        }
+    }
+
+    pub fn is_dead(&self) -> bool {
+        match self {
+            GridCell::Unit { character: _, hp } => *hp <= 0,
+            _ => false,
+        }
+    }
+
+    pub fn display(&self) -> String {
+        match self {
+            GridCell::Empty => ".",
+            GridCell::Wall => "#",
+            GridCell::Unit {
+                character: ch,
+                hp: _,
+            } => {
+                if *ch == Character::Elf {
+                    "E"
+                } else {
+                    "G"
+                }
+            }
+        }
+        .to_string()
+    }
+
+    pub fn display_hitpoints(&self) -> String {
+        let (c, h) = match self {
+            GridCell::Empty => ("", -1),
+            GridCell::Wall => ("", -1),
+            GridCell::Unit { character: ch, hp } => {
+                if *ch == Character::Elf {
+                    ("E", *hp)
+                } else {
+                    ("G", *hp)
+                }
+            }
+        };
+        if c == "" {
+            return "".to_string();
+        }
+        format!("{}({})", c, h).to_string()
     }
 }
 
@@ -71,7 +138,7 @@ impl GridCell {
 //     }
 // }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Character {
     Elf,
     Gobelin,
