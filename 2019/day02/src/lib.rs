@@ -34,6 +34,40 @@ pub fn exo01(code: &str, replace: bool) -> usize {
     memory[0]
 }
 
+pub fn exo02(code: &str, noun: usize, verb: usize) -> usize {
+    let mut memory: Vec<usize> = code
+        .split(",")
+        .map(|s| usize::from_str_radix(s, 10).unwrap())
+        .collect();
+    memory[1] = noun;
+    memory[2] = verb;
+    let mut done = false;
+    let mut pc: usize = 0;
+    while !done {
+        let opcode = memory[pc];
+        if opcode == 99 {
+            done = true;
+        } else if opcode == 1 {
+            let mem_a = memory[pc + 1];
+            let mem_b = memory[pc + 2];
+            let result = memory[mem_a] + memory[mem_b];
+            let mem_dest = memory[pc + 3];
+            memory[mem_dest] = result;
+            pc += 4;
+        } else if opcode == 2 {
+            let mem_a = memory[pc + 1];
+            let mem_b = memory[pc + 2];
+            let result = memory[mem_a] * memory[mem_b];
+            let mem_dest = memory[pc + 3];
+            memory[mem_dest] = result;
+            pc += 4;
+        } else {
+            panic!(format!("opcode unknown: <{}>", opcode));
+        }
+    }
+    memory[0]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -78,5 +112,33 @@ mod tests {
     fn do_exo01() {
         let input = read_input();
         assert_eq!(exo01(&input, true), 4930687);
+    }
+
+    #[test]
+    fn do_exo02() {
+        let input = read_input();
+        let expected_output = 19690720;
+        let mut noun = 0;
+        let mut verb = 0;
+        // println!("try {} / {}", noun, verb);
+        loop {
+            let output = exo02(&input, noun, verb);
+            println!("try {} / {} => {}", noun, verb, output);
+            if output == expected_output {
+                break;
+            }
+            verb += 1;
+            if verb == 157 {
+                noun += 1;
+                verb = 0;
+                // println!("try {} / {}", noun, verb);
+            }
+            if noun == 157 {
+                panic!("not found");
+            }
+        }
+        assert_eq!(noun, 53);
+        assert_eq!(verb, 35);
+        assert_eq!(100 * noun + verb, 5335);
     }
 }
