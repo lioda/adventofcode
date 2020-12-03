@@ -75,7 +75,7 @@ mod test {
         );
     }
 
-    const values: &[&str] = &[
+    const VALUES: &[&str] = &[
         "9-12 q: qqqxhnhdmqqqqjz",
         "12-16 z: zzzzzznwlzzjzdzf",
         "4-7 s: sssgssw",
@@ -1080,10 +1080,10 @@ mod test {
 
     #[test]
     fn part_a() {
-        assert_eq!(count_a(values.to_vec()), 569);
+        assert_eq!(count_a(VALUES.to_vec()), 569);
     }
     #[test]
     fn part_b() {
-        assert_eq!(count_b(values.to_vec()), 346);
+        assert_eq!(count_b(VALUES.to_vec()), 346);
     }
 }
