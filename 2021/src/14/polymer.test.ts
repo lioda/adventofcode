@@ -28,7 +28,8 @@ describe("Polymer", () => {
 
     polymer.generation(1);
 
-    expect(polymer.toString()).toEqual("NCNBCHB");
+    // expect(polymer.toString()).toEqual("NCNBCHB");
+    expect(polymer.elementsDiff()).toEqual(1);
   });
 
   it("should generate 4 steps", () => {
@@ -37,9 +38,10 @@ describe("Polymer", () => {
 
     polymer.generation(4);
 
-    expect(polymer.toString()).toEqual(
-      "NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB"
-    );
+    // expect(polymer.toString()).toEqual(
+    //   "NBBNBNBBCCNBCNCCNBBNBBNBBBNBBNBBCBHCBHHNHCBBCBHCB"
+    // );
+    expect(polymer.elementsDiff()).toEqual(23 - 5);
   });
 
   it("should count elements after 10 steps", () => {
@@ -49,5 +51,14 @@ describe("Polymer", () => {
     polymer.generation(10);
 
     expect(polymer.elementsDiff()).toEqual(1588);
+  });
+
+  it("should count elements after 40 steps", () => {
+    const polymer = new Polymer();
+    input.forEach((line) => polymer.parse(line));
+
+    polymer.generation(40);
+
+    expect(polymer.elementsDiff()).toEqual(2188189693529);
   });
 });

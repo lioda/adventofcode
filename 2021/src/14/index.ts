@@ -9,5 +9,14 @@ async function exo01() {
 
   console.log(polymer.elementsDiff());
 }
+async function exo02() {
+  const polymer = new Polymer();
+  await inputByLine("src/14/input", (line) => polymer.parse(line));
 
-exo01();
+  polymer.generation(40);
+
+  console.log(polymer.elementsDiff());
+}
+
+// exo01();
+exo02();
