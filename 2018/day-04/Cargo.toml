@@ -5,4 +5,4 @@ authors = ["Lioda <lionel.dulout@gmail.com>"]
 
 [dependencies]
 chrono = "0.4.6"
-regex = "1.1.0"
+regex = "1.5.5"
