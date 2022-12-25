@@ -57,11 +57,6 @@ describe("25", () => {
     ])("should parse number $input to $expected", ({ input, expected }) => {
       const result = toSnafu(input);
 
-      //   if (input !== fromSnafu(result)) {
-      //     //   expect(input).toEqual(fromSnafu(result));
-      //     expect(result).toEqual("");
-      //   }
-      //     // expect(toSnafu(input)).toEqual(fromSnafu(result));
       expect(result).toEqual(expected);
     });
   });

@@ -39,7 +39,6 @@ export function toSnafu(input: number): string {
       applyCarry(result);
       result.push("=");
     }
-    // console.log(toString(result));
   }
 
   return toString(result);
@@ -55,7 +54,6 @@ function toString(result: SnafuDigit[]): string {
 }
 
 function applyCarry(digits: SnafuDigit[]) {
-  //   console.log("applyCarry", { digits });
   let carry = 1;
   let i = digits.length - 1;
   while (carry > 0 && i >= 0) {
