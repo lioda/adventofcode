@@ -187,4 +187,13 @@ export default {
 
   // Whether to use watchman for file crawling
   // watchman: true,
+  moduleNameMapper: {
+    '(.+)\\.js': '$1',
+  },
+  extensionsToTreatAsEsm: ['.ts'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
 }
