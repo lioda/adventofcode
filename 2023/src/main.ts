@@ -1,4 +1,4 @@
-import { Solver01 as Solver } from './01/index.js'
+import { Solver02 as Solver } from './02/index.js'
 
 export async function main() {
   const solver = new Solver()
