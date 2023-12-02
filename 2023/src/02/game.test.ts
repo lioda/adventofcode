@@ -6,9 +6,14 @@ describe('Game', () => {
     expect(game.getId()).toBe(259)
   })
 
-  it('should find the max of each number', () => {
+  it('should find the max of each color', () => {
     const game = new Game('Game 259: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue')
     expect(game.getMaxima()).toStrictEqual({ blue: 4, green: 3, red: 1 })
+  })
+
+  it('should obtain the power by multiplying maxima', () => {
+    const game = new Game('Game 259: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue')
+    expect(game.getPower()).toBe(12)
   })
 
   it.each([

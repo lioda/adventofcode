@@ -28,6 +28,10 @@ export class Game {
     return this.maxima
   }
 
+  getPower(): number {
+    return this.maxima.blue * this.maxima.green * this.maxima.red
+  }
+
   isRespecting(threshold: Maxima): boolean {
     return this.maxima.blue <= threshold.blue && this.maxima.green <= threshold.green && this.maxima.red <= threshold.red
   }
