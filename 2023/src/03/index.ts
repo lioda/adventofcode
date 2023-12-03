@@ -1,5 +1,5 @@
 import { Solver } from '../exercise/index.js'
-import { findPartNumbers } from './find-part-numbers.js'
+import { findGears, findPartNumbers } from './find-part-numbers.js'
 
 export class Solver03 implements Solver {
   private readonly grid = [
@@ -149,6 +149,6 @@ export class Solver03 implements Solver {
     return findPartNumbers(this.grid).reduce((a, b) => a + b, 0)
   }
   step02(): unknown {
-    throw new Error()
+    return findGears(this.grid)
   }
 }

@@ -59,7 +59,7 @@ function extractNumbers(line: string | undefined): ExtractedNumbers[] {
     result.push({ value: parseInt(current), start, end: line.length - 1 })
   }
 
-  console.log(result)
+  // console.log(result)
   return result
 }
 
@@ -70,4 +70,52 @@ function isNumber(c: string | undefined): boolean {
     return false
   }
   return true
+}
+
+type Gears = {
+  ratio: number
+  gears: number[]
+}
+
+export function findGears(grid: string[]): Gears {
+  const result: Gears = {
+    ratio: 0,
+    gears: [],
+  }
+
+  const extractedNumbers = []
+  for (let lineNum = 0; lineNum < grid.length; ++lineNum) {
+    const line = grid[lineNum]
+    const extracteds = extractNumbers(line)
+    extractedNumbers.push(...extracteds.map((e) => ({ ...e, lineNum })))
+  }
+
+  for (let lineNum = 0; lineNum < grid.length; ++lineNum) {
+    const line = grid[lineNum]!
+    for (let pos = 0; pos < line?.length; ++pos) {
+      const c = line![pos]!
+
+      if (c !== '*') {
+        continue
+      }
+
+      const adjacentNumbers = extractedNumbers.filter((extracted) => {
+        if (extracted.lineNum >= lineNum - 1 && extracted.lineNum <= lineNum + 1) {
+          if (pos >= extracted.start - 1 && pos <= extracted.end + 1) {
+            return true
+          }
+        }
+        return false
+      })
+
+      if (adjacentNumbers.length === 2) {
+        // console.dir(adjacentNumbers, { depth: 10 })
+        const ratio = adjacentNumbers[0]!.value * adjacentNumbers[1]!.value //adjacentNumbers.reduce((acc, n) => acc * n.value, 0)
+        result.ratio += ratio
+        result.gears.push(ratio)
+      }
+    }
+  }
+
+  return result
 }

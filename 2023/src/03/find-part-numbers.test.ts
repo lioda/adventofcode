@@ -1,4 +1,4 @@
-import { findPartNumbers } from './find-part-numbers'
+import { findGears, findPartNumbers } from './find-part-numbers'
 
 describe('findPartNumbers', () => {
   it('should ignore number when no symbol', () => {
@@ -34,5 +34,28 @@ describe('findPartNumbers', () => {
     const partNumbers = findPartNumbers(input)
 
     expect(partNumbers.reduce((a, b) => a + b, 0)).toBe(4361)
+  })
+})
+describe('findGears', () => {
+  it('should find all gears with their numbers', () => {
+    const input = [
+      '467..114..',
+      '...*......',
+      '..35..633.',
+      '......#...',
+      '617*......',
+      '.....+.58.',
+      '..592.....',
+      '......755.',
+      '...$.*....',
+      '.664.598..',
+    ]
+
+    const gears = findGears(input)
+
+    expect(gears).toStrictEqual({
+      ratio: 467835,
+      gears: [16345, 451490],
+    })
   })
 })
