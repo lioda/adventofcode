@@ -7,7 +7,7 @@ describe('Card', () => {
     expect(card.getValue()).toBe(1)
   })
 
-  it('double card value1 for each winning number', () => {
+  it('double card value for each winning number', () => {
     const card = new Card('Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53')
 
     expect(card.getValue()).toBe(8)
@@ -17,5 +17,11 @@ describe('Card', () => {
     const card = new Card('Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36')
 
     expect(card.getValue()).toBe(0)
+  })
+
+  it('count winning numbers', () => {
+    const card = new Card('Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53')
+
+    expect(card.countWinningNumbers()).toBe(4)
   })
 })

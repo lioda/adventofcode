@@ -9,6 +9,9 @@ export class Solver04 implements Solver {
     return cards.sumOfValues()
   }
   step02(): unknown {
-    throw new Error('Method not implemented.')
+    const input = new TextFileLines('src/04/input.txt')
+    const cards = new Cards(input)
+
+    return cards.countCards()
   }
 }
