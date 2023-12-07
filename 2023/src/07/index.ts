@@ -1,5 +1,5 @@
 import { Solver, TextFileLines } from '../exercise/index.js'
-import { camelCardsTotalWinning } from './camelCards.js'
+import { camelCardsTotalWinning, camelCardsWithJokersTotalWinning } from './camelCards.js'
 
 export class DaySolver implements Solver {
   step01(): unknown {
@@ -7,6 +7,7 @@ export class DaySolver implements Solver {
     return camelCardsTotalWinning(lines)
   }
   step02(): unknown {
-    throw new Error('Method not implemented.')
+    const lines = new TextFileLines('src/07/input.txt')
+    return camelCardsWithJokersTotalWinning(lines)
   }
 }
