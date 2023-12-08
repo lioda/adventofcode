@@ -18,6 +18,20 @@ export class ArrayLines implements Lines {
   }
 }
 
+export class StringLines implements Lines {
+  constructor(private readonly input: string) {}
+
+  map<T>(lineMapper: (s: string) => T): Promise<T[]> {
+    const result: T[] = []
+
+    for (const line of this.input.split(`\n`)) {
+      result.push(lineMapper(line))
+    }
+
+    return Promise.resolve(result)
+  }
+}
+
 export class TextFileLines implements Lines {
   private readonly fd: Promise<FileHandle>
   constructor(path: string) {
