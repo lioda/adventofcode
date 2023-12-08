@@ -8,7 +8,7 @@ export class DesertMap {
     const instructions = arr.shift()?.split('')
 
     arr.shift()
-    const nodeDefRegexp = /(?<name>[A-Z]{3}) = \((?<left>[A-Z]{3}), (?<right>[A-Z]{3})\)/
+    const nodeDefRegexp = /(?<name>[0-9A-Z]{3}) = \((?<left>[0-9A-Z]{3}), (?<right>[0-9A-Z]{3})\)/
     const nodeDefs = arr.map((line) => {
       const groups = nodeDefRegexp.exec(line)!.groups
       return { name: groups!['name']!, left: groups!['left']!, right: groups!['right']! }
@@ -36,5 +36,54 @@ export class DesertMap {
       ++steps
     }
     return steps
+  }
+
+  public stepsForGhosts(): number {
+    const startNodes = Array.from(this.nodes.entries())
+      .filter(([name]) => name.endsWith('A'))
+      .map(([_, node]) => node)
+
+    const stepsToReachFirstZNode: Record<string, number> = this.findStepForReachingAZNode(startNodes)
+
+    return Object.entries(stepsToReachFirstZNode)
+      .map(([, steps]) => steps)
+      .reduce((lcm, steps) => this.findLeastCommonMultiple(lcm, steps))
+  }
+
+  private findLeastCommonMultiple(n1: number, n2: number): number {
+    const a = { base: n1, current: n1 }
+    const b = { base: n2, current: n2 }
+
+    while (a.current != b.current) {
+      while (a.current < b.current) {
+        a.current += a.base
+      }
+      while (b.current < a.current) {
+        b.current += b.base
+      }
+    }
+    return a.current
+  }
+
+  private findStepForReachingAZNode(startNodes: NodeDef[]) {
+    const stepsToReachFirstZNode: Record<string, number> = {}
+
+    for (const start of startNodes) {
+      let currentNode = start
+      let steps = 0
+      while (!currentNode.name.endsWith('Z')) {
+        const instruction = this.instructions[steps % this.instructions.length]!
+
+        if (instruction === 'L') {
+          currentNode = this.nodes.get(currentNode.left)!
+        } else {
+          currentNode = this.nodes.get(currentNode.right)!
+        }
+
+        ++steps
+      }
+      stepsToReachFirstZNode[start.name] = steps
+    }
+    return stepsToReachFirstZNode
   }
 }

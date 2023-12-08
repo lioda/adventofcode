@@ -7,6 +7,9 @@ export class DaySolver implements Solver {
     return DesertMap.parse(input).then((map) => map.stepsToReach('AAA', 'ZZZ'))
   }
   step02(): unknown {
-    throw new Error('Method not implemented.')
+    const input = new TextFileLines('src/08/input.txt')
+    return DesertMap.parse(input).then((map) => map.stepsForGhosts())
+    // return DesertMap.parse(input).then((map) => map.explore(5))
+    // return DesertMap.parse(input).then((map) => map.findCycle())
   }
 }

@@ -1,0 +1,38 @@
+yarn run v1.22.5
+$ ts-node --esm src/main.ts 08 2
+./08/index.js
+explore
+{
+  start: true,
+  currentNodes: [ { name: 'PDA', left: 'NVV', right: 'MSV' } ]
+}
+{
+  instruction: 'L',
+  steps: 14257,
+  diff: 14257,
+  currentNode: { name: 'XBZ', left: 'MSV', right: 'NVV' }
+}
+{
+  instruction: 'L',
+  steps: 28514,
+  diff: 14257,
+  currentNode: { name: 'XBZ', left: 'MSV', right: 'NVV' }
+}
+{
+  instruction: 'L',
+  steps: 42771,
+  diff: 14257,
+  currentNode: { name: 'XBZ', left: 'MSV', right: 'NVV' }
+}
+{
+  instruction: 'L',
+  steps: 57028,
+  diff: 14257,
+  currentNode: { name: 'XBZ', left: 'MSV', right: 'NVV' }
+}
+{
+  end: true,
+  currentNodes: [ { name: 'TGD', left: 'VPT', right: 'BBH' } ]
+}
+{ result: 60000 }
+Done in 1.35s.
