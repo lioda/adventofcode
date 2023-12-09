@@ -9,6 +9,9 @@ export class DaySolver implements Solver {
       .then((histories) => histories.map((history) => history.extrapolateNextNumber()).reduce((a, b) => a + b))
   }
   step02(): unknown {
-    throw new Error('Method not implemented.')
+    const input = new TextFileLines('src/09/input.txt')
+    return input
+      .map((line) => History.parse(line))
+      .then((histories) => histories.map((history) => history.extrapolatePreviousNumber()).reduce((a, b) => a + b))
   }
 }

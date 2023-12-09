@@ -40,4 +40,31 @@ export class History {
     }
     return result
   }
+
+  public extrapolatePreviousNumber(): number {
+    const derivations: number[][] = [[...this.values]]
+
+    while (!derivations.at(-1)?.every((n) => n === 0)) {
+      const derivation = this.derivate(derivations.at(-1))
+      derivations.push(derivation)
+    }
+
+    return (
+      derivations
+        .reverse()
+        .map((derivation, i) => {
+          if (i === 0) {
+            derivation.splice(0, 0, 0)
+            return derivation
+          }
+          const diff = derivations[i - 1]?.at(0) ?? 0
+          const toAdd = (derivation.at(0) ?? 0) - diff
+
+          derivation.splice(0, 0, toAdd)
+          return derivation
+        })
+        .at(-1)
+        ?.at(0) ?? 0
+    )
+  }
 }
