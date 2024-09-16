@@ -8,4 +8,8 @@ export class Solver01 implements Solver {
   step01(): Promise<unknown> {
     return this.exo.combine(this.input)
   }
+
+  step02(): unknown {
+    throw new Error('Method not implemented.')
+  }
 }
