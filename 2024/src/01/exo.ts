@@ -1,36 +1,8 @@
 import { Lines } from '../exercise/index.js'
 
-const patterns = {
-  '1': 1,
-  '2': 2,
-  '3': 3,
-  '4': 4,
-  '5': 5,
-  '6': 6,
-  '7': 7,
-  '8': 8,
-  '9': 9,
-  one: 1,
-  two: 2,
-  three: 3,
-  four: 4,
-  five: 5,
-  six: 6,
-  seven: 7,
-  eight: 8,
-  nine: 9,
-}
-
 export class Exo01 {
-  public async combine(lineReader: Lines): Promise<number> {
-    const numbers = await lineReader.map((s) => this.extractNumbers(s))
-    const { left, right } = numbers.reduce<{ left: number[]; right: number[] }>(
-      (acc, leftAndRight) => ({ left: [...acc.left, leftAndRight[0]], right: [...acc.right, leftAndRight[1]] }),
-      {
-        left: [],
-        right: [],
-      },
-    )
+  public async distance(lineReader: Lines): Promise<number> {
+    const { left, right } = await this.extractLeftAndRight(lineReader)
 
     left.sort((a, b) => a - b)
     right.sort((a, b) => a - b)
@@ -38,6 +10,17 @@ export class Exo01 {
     return this.zip(left, right)
       .map(([a, b]) => Math.abs(a - b))
       .reduce((a, b) => a + b, 0)
+  }
+
+  private async extractLeftAndRight(lineReader: Lines): Promise<{ left: number[]; right: number[] }> {
+    const numbers = await lineReader.map((s) => this.extractNumbers(s))
+    return numbers.reduce<{ left: number[]; right: number[] }>(
+      (acc, leftAndRight) => ({ left: [...acc.left, leftAndRight[0]], right: [...acc.right, leftAndRight[1]] }),
+      {
+        left: [],
+        right: [],
+      },
+    )
   }
 
   private extractNumbers(s: string): [number, number] {
@@ -50,5 +33,11 @@ export class Exo01 {
   private zip(left: number[], right: number[]): [number, number][] {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return left.map((value, i) => [value, right[i]!])
+  }
+
+  public async similarity(lineReader: Lines): Promise<number> {
+    const { left, right } = await this.extractLeftAndRight(lineReader)
+
+    return left.map((n) => right.filter((x) => x === n).length * n).reduce((a, b) => a + b, 0)
   }
 }
