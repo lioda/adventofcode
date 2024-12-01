@@ -1,5 +1,5 @@
-import { Solver, TextFileLines } from '../exercise/index.js'
-import { Exo01 } from './exo.js'
+import { Solver, TextFileLines } from '../exercise/index'
+import { Exo01 } from './exo'
 
 export class Solver01 implements Solver {
   private readonly exo = new Exo01()

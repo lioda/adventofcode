@@ -1,5 +1,5 @@
-export { TextFileLines } from './line-reader.js'
-export type { Lines } from './line-reader.js'
+export { TextFileLines } from './line-reader'
+export type { Lines } from './line-reader'
 
 export interface Solver {
   step01(): unknown

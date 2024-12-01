@@ -1,4 +1,4 @@
-import { Lines } from '../exercise/index.js'
+import { Lines } from '../exercise/index'
 
 export class Exo01 {
   public async distance(lineReader: Lines): Promise<number> {
