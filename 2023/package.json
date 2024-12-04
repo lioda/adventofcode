@@ -8,6 +8,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:clean": "jest --clearCache",
+    "start": "ts-node --esm src/main.ts",
     "build": "tsc",
     "lint": "eslint"
   },
