@@ -1,16 +1,20 @@
 import { Solver, TextFileLines } from '../exercise/index'
-import { SafeReport } from './exo'
+import { Dampener, SafeReport } from './exo'
 
 export class SolverN implements Solver {
-  private readonly input = new TextFileLines('src/02/input.txt')
-
   async step01(): Promise<unknown> {
-    const safeReports = await this.input.map((l) => SafeReport.parse(l))
+    const input = new TextFileLines('src/02/input.txt')
+    const safeReports = await input.map((l) => SafeReport.parse(l))
 
     return safeReports.filter((x) => !!x).length
   }
 
-  step02(): Promise<unknown> {
-    return this.exo.similarity(this.input)
+  async step02(): Promise<unknown> {
+    const input = new TextFileLines('src/02/input.txt')
+    const dampener = new Dampener()
+
+    const safeReports = await input.map((l) => SafeReport.parse(l, dampener))
+
+    return safeReports.filter((x) => !!x).length
   }
 }
