@@ -38,6 +38,25 @@ export class CharacterMatrix {
       line.split('').reduce((acc, ch, colIdx) => (ch === searched ? [...acc, fn({ line: lineIdx, column: colIdx })] : acc), [] as T[]),
     )
   }
+
+  public findXPatternAround(ch: string, pattern: string): [string, string][] {
+    return this.mapEach<[string, string]>(ch, (pos) => {
+      return [
+        [
+          this.get({ line: pos.line - 1, column: pos.column - 1 }) ?? '',
+          this.get(pos),
+          this.get({ line: pos.line + 1, column: pos.column + 1 }) ?? '',
+        ].join(''),
+        [
+          this.get({ line: pos.line - 1, column: pos.column + 1 }) ?? '',
+          this.get(pos),
+          this.get({ line: pos.line + 1, column: pos.column - 1 }) ?? '',
+        ].join(''),
+      ]
+    }).filter(
+      ([a, b]) => (a === pattern || a.split('').reverse().join('') === pattern) && (b === pattern || b.split('').reverse().join('') === pattern),
+    )
+  }
 }
 
 export function step01(lines: string[]) {
@@ -48,4 +67,9 @@ export function step01(lines: string[]) {
       return xmases.length
     })
     .reduce((a, b) => a + b, 0)
+}
+
+export function step02(lines: string[]) {
+  const matrix = new CharacterMatrix(lines)
+  return matrix.findXPatternAround('A', 'MAS').length
 }

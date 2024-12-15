@@ -41,6 +41,48 @@ describe('CharacterMatrix', () => {
       { line: 3, column: 0 },
     ])
   })
+
+  it.each([
+    {
+      input: [
+        'M.S', //
+        '.A.',
+        'M.S',
+      ],
+      ch: 'A',
+      expected: [['MAS', 'SAM']],
+    },
+    {
+      input: [
+        'MMMSXXMASM',
+        'MSAMXMSMSA',
+        'AMXSXMAAMM',
+        'MSAMASMSMX',
+        'XMASAMXAMM',
+        'XXAMMXXAMA',
+        'SMSMSASXSS',
+        'SAXAMASAAA',
+        'MAMMMXMMMM',
+        'MXMXAXMASX',
+      ],
+      ch: 'A',
+      expected: [
+        ['MAS', 'SAM'],
+        ['MAS', 'MAS'],
+        ['SAM', 'SAM'],
+        ['MAS', 'SAM'],
+        ['SAM', 'MAS'],
+        ['SAM', 'SAM'],
+        ['SAM', 'SAM'],
+        ['SAM', 'SAM'],
+        ['SAM', 'SAM'],
+      ],
+    },
+  ])('should find some X pattern', ({ input, ch, expected }) => {
+    const matrix = new CharacterMatrix(input)
+
+    expect(matrix.findXPatternAround(ch, 'MAS')).toStrictEqual(expected)
+  })
 })
 
 describe('step01', () => {

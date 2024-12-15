@@ -1,5 +1,5 @@
 import { Solver, TextFileLines } from '../exercise/index'
-import { step01 } from './exo'
+import { step01, step02 } from './exo'
 
 export class SolverN implements Solver {
   async step01(): Promise<unknown> {
@@ -9,6 +9,8 @@ export class SolverN implements Solver {
   }
 
   async step02(): Promise<unknown> {
-    return undefined
+    const lines = await new TextFileLines('src/04/input.txt').map((l) => l)
+
+    return step02(lines)
   }
 }
