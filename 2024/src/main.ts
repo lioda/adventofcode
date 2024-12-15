@@ -1,4 +1,4 @@
-import { SolverN } from './03/index'
+import { SolverN } from './04/index'
 
 export async function main() {
   const step01 = await new SolverN().step01()
