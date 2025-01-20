@@ -75,6 +75,9 @@ class Guard {
   public markPosition(map: Map): void {
     map.markPosition(this.position)
   }
+  public markOccurence(map: Map): boolean {
+    return map.markOccurence(this.position, this.direction)
+  }
 }
 
 enum Cell {
@@ -83,16 +86,30 @@ enum Cell {
 }
 
 class Map {
+  private nextObst: Position = { x: -1, y: 0 }
   private readonly markedPositions: Set<string> = new Set()
+  private readonly markedOccurences: Set<string> = new Set()
   private readonly cells: Cell[][]
-  constructor(lines: string[]) {
+  constructor(lines: string[], public readonly forceObstruction?: Position) {
     this.cells = lines.map((line) => line.split('').map((c) => (c === '#' ? Cell.block : Cell.empty)))
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (forceObstruction) this.cells[forceObstruction.y]![forceObstruction.x] = Cell.block
   }
 
   public markPosition(position: Position): void {
     if (!this.isCellValid(position)) return
 
     this.markedPositions.add(`${position.x} / ${position.y}`)
+  }
+  public markOccurence(position: Position, direction: Direction): boolean {
+    if (!this.isCellValid(position)) return false
+
+    const occurence = `${position.x} / ${position.y} / ${direction}`
+    if (this.markedOccurences.has(occurence)) return true
+
+    this.markedOccurences.add(occurence)
+    return false
   }
 
   public countPositions(): number {
@@ -110,4 +127,51 @@ class Map {
     const cell = this.cells[y]?.[x]
     return cell !== Cell.block
   }
+
+  public nextObstruction(): Map | undefined {
+    if (!this.obtainNextObstruction()) return undefined
+
+    return new Map(
+      this.cells.map((line) => line.map((c) => (c === Cell.block ? '#' : '.')).join('')),
+      this.nextObst,
+    )
+  }
+
+  private obtainNextObstruction(): boolean {
+    const maxY = this.cells.length
+    const maxX = this.cells[0]?.length ?? 0
+
+    if (this.nextObst.x === maxX) {
+      this.nextObst = { x: 0, y: this.nextObst.y + 1 }
+    } else {
+      this.nextObst = { x: this.nextObst.x + 1, y: this.nextObst.y }
+    }
+    return this.nextObst.y < maxY
+  }
+}
+
+export function exo2(input: string[]): number {
+  let debug = 3000000000
+  const map = new Map(input)
+  let loops = 0
+
+  let currentMap = map.nextObstruction()
+  while (currentMap) {
+    let guard = Guard.parse(input)
+    guard.markOccurence(currentMap)
+
+    while (guard.isInside(currentMap) && debug > 0) {
+      guard = guard.nextStep(currentMap)
+      const alreadyOccured = guard.markOccurence(currentMap)
+      if (alreadyOccured) {
+        ++loops
+        break
+      }
+      --debug
+    }
+
+    if (debug <= 0) return -1
+    currentMap = map.nextObstruction()
+  }
+  return loops
 }
